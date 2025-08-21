@@ -1,0 +1,23 @@
+{
+  "name": "newswebsitenlpembedded",
+  "version": "1.0.0",
+  "description": "This respository has contribution of 3 CSE students .  it contains the code of minor project willl be added to the resume of all 3 persons .",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SameerCD30/NewsWebsiteNLPembedded.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SameerCD30/NewsWebsiteNLPembedded/issues"
+  },
+  "homepage": "https://github.com/SameerCD30/NewsWebsiteNLPembedded#readme",
+  "dependencies": {
+    "mongoose": "^8.17.2"
+  }
+}
