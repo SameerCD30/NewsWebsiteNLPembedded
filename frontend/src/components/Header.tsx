@@ -1,7 +1,10 @@
 import { MapPin } from "lucide-react";
 import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom"; // <-- import this
 
 export const Header = () => {
+  const navigate = useNavigate(); // <-- initialize navigate
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-border/50 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/80 shadow-lg">
       <div className="flex h-full items-center justify-between px-8">
@@ -15,7 +18,12 @@ export const Header = () => {
             Change Location
           </button>
           
-          <Button variant="danger" size="default" className="shadow-md hover:shadow-lg transition-all duration-200">
+          <Button
+            variant="danger"
+            size="default"
+            className="shadow-md hover:shadow-lg transition-all duration-200"
+            onClick={() => navigate("/auth")} // <-- navigate to Auth page
+          >
             Login / SignUp
           </Button>
         </div>
