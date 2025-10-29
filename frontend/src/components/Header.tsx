@@ -38,7 +38,7 @@ export const Header = () => {
 
           {/* Login / Signup */}
           <Button
-  onClick={() => navigate("/auth")}
+  onClick={() => navigate("/login")}
   className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold px-6 py-2 rounded-lg 
              shadow-[0_4px_10px_rgba(255,0,0,0.4)] 
              transition-all duration-300 
