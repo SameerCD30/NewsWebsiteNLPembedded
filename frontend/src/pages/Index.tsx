@@ -6,7 +6,7 @@ import { PostCard } from "@/components/PostCard";
 const Index = () => {
   const posts = [
     {
-      author: "John Doe",
+      author: "Vikram Ghai",
       timestamp: "2h ago",
       content: "The street light near the community park has been broken for two weeks. It's creating safety concerns for evening walkers.",
       upvotes: 24,
@@ -15,7 +15,7 @@ const Index = () => {
       image: "https://images.unsplash.com/photo-1578678809746-0b29d7d19f1a?w=800&h=600&fit=crop",
     },
     {
-      author: "Sarah M",
+      author: "Sarah Mateo",
       timestamp: "5h ago",
       content: "Large pothole causing damage to vehicles. Needs immediate attention before someone gets hurt.",
       upvotes: 18,
@@ -32,7 +32,7 @@ const Index = () => {
       image: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&h=600&fit=crop",
     },
     {
-      author: "Emily Chen",
+      author: "Emily Clark",
       timestamp: "1d ago",
       content: "Broken traffic signal at Main St intersection causing dangerous situations during rush hour. Please fix urgently!",
       upvotes: 45,

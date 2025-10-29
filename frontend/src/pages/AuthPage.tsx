@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 export default function AuthPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -68,11 +71,11 @@ export default function AuthPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+     const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username, email, password }),
+});
 
       const data = await res.json();
 

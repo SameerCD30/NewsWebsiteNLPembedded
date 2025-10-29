@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Separator } from "./ui/separator";
+import { CommentSection } from "./CommentSection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,8 +26,6 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "./ui/dialog";
-import { Separator } from "./ui/separator";
-import { CommentSection } from "./CommentSection";
 
 interface PostCardProps {
   author: string;
@@ -37,7 +36,11 @@ interface PostCardProps {
   tag?: string;
   image?: string;
   location?: string;
+  initialReportCount?: number; // 👈 added for tracking report count
 }
+
+// 👇 Number of reports required to show the "Potentially fake" label
+const REPORT_THRESHOLD = 3;
 
 export const PostCard = ({
   author,
@@ -48,34 +51,51 @@ export const PostCard = ({
   tag,
   image,
   location,
+  initialReportCount = 0,
 }: PostCardProps) => {
   const [votes, setVotes] = useState(upvotes);
-  const [showVoteBreakdown, setShowVoteBreakdown] = useState(false);
   const [isReported, setIsReported] = useState(false);
   const [reportDialog, setReportDialog] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [reportCount, setReportCount] = useState(initialReportCount);
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase();
-  };
 
   const handleUpvote = () => setVotes((prev) => prev + 1);
-  const handleReport = () => {
+
+  const handleReport = async () => {
+    if (isReported) return;
+
     setIsReported(true);
     setReportDialog(false);
+
+    try {
+      // 🔧 Example backend call
+      // Replace `/api/report/${postId}` with your real endpoint
+      const res = await fetch(`/api/report/${author}`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to report");
+      const data = await res.json();
+
+      // Update report count (backend should return updated count)
+      const newCount =
+        typeof data.reportCount === "number"
+          ? data.reportCount
+          : reportCount + 1;
+
+      setReportCount(newCount);
+    } catch (err) {
+      console.error(err);
+      // Optionally show toast or revert
+      setReportCount((prev) => prev + 1);
+    }
   };
 
   const toggleComments = () => setShowComments((prev) => !prev);
-
-  const voteBreakdown = {
-    local: Math.floor(votes * 0.5),
-    state: Math.floor(votes * 0.3),
-    national: Math.floor(votes * 0.2),
-  };
 
   const tagColors: Record<string, string> = {
     Fake: "bg-red-100 text-red-700 border-red-300",
@@ -88,7 +108,7 @@ export const PostCard = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all duration-200 group-hover:ring-primary/40">
+          <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
             <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold">
               {getInitials(author)}
             </AvatarFallback>
@@ -99,16 +119,26 @@ export const PostCard = ({
           </div>
         </div>
 
-        {tag && (
-          <Badge
-            variant="outline"
-            className={`${
-              tagColors[tag] || "bg-primary/5 text-primary border-primary/40"
-            } px-3 py-1 font-medium`}
-          >
-            {tag}
-          </Badge>
-        )}
+        {/* Tag section */}
+        <div className="flex items-center gap-2">
+          {tag && (
+            <Badge
+              variant="outline"
+              className={`${
+                tagColors[tag] || "bg-primary/5 text-primary border-primary/40"
+              } px-3 py-1 font-medium`}
+            >
+              {tag}
+            </Badge>
+          )}
+
+          {/* 👇 Show “Potentially Fake” only when reportCount >= threshold */}
+          {reportCount >= REPORT_THRESHOLD && (
+            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
+              Potentially Fake
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -133,16 +163,15 @@ export const PostCard = ({
 
       {/* Footer */}
       <div className="flex items-center gap-6 pt-2">
-{/* Simple Upvote Button */}
-<button
-  aria-label="Upvote post"
-  onClick={handleUpvote}
-  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
->
-  <ArrowUp className="h-5 w-5 transition-transform duration-200" />
-  <span className="text-sm font-semibold">{votes}</span>
-</button>
-
+        {/* Upvote */}
+        <button
+          aria-label="Upvote post"
+          onClick={handleUpvote}
+          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
+        >
+          <ArrowUp className="h-5 w-5" />
+          <span className="text-sm font-semibold">{votes}</span>
+        </button>
 
         {/* Comments */}
         <button
@@ -156,164 +185,78 @@ export const PostCard = ({
 
         {/* Dropdown */}
         <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <button
-      aria-label="More actions"
-      className="flex items-center gap-2 ml-auto text-muted-foreground 
-                 hover:text-primary transition-all duration-300 
-                 hover:scale-110 active:scale-95 p-2 rounded-full 
-                 hover:bg-muted/30 backdrop-blur-sm"
-    >
-      <MoreVertical className="h-5 w-5" />
-    </button>
-  </DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="More actions"
+              className="flex items-center gap-2 ml-auto text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110 p-2 rounded-full hover:bg-muted/30 backdrop-blur-sm"
+            >
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
 
-  <DropdownMenuContent
-    align="end"
-    className="mt-2 w-44 rounded-xl border border-border/50 bg-card/90 
-               shadow-lg backdrop-blur-md text-sm p-1 
-               animate-in fade-in-0 zoom-in-95"
-  >
-    {/* Share */}
-    <Dialog>
-      <DialogTrigger asChild>
-        <DropdownMenuItem
-          className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg 
-                     text-foreground/90 transition-all duration-300 
-                     hover:bg-blue-500/15 hover:text-blue-600"
-        >
-          <Share2 className="h-4 w-4 text-blue-500" />
-          <span>Share</span>
-        </DropdownMenuItem>
-      </DialogTrigger>
-
-      {/* Share Modal */}
-     <DialogContent
-  className="bg-card/95 backdrop-blur-xl border border-border/50 
-             shadow-2xl rounded-2xl w-[380px] p-6 
-             animate-in fade-in-0 zoom-in-95 
-             data-[state=open]:animate-in 
-             data-[state=closed]:animate-out 
-             data-[state=open]:zoom-in-95 
-             data-[state=closed]:zoom-out-95 
-             duration-300"
->
-  <DialogHeader>
-    <DialogTitle className="text-lg font-semibold text-foreground text-center">
-      Share Post
-    </DialogTitle>
-  </DialogHeader>
-
-  <p className="text-sm text-muted-foreground mb-5 text-center">
-    Choose a platform to share or copy the post link:
-  </p>
-
-  <div className="flex flex-col gap-3">
-    <Button
-      variant="outline"
-      onClick={() => {
-        navigator.clipboard.writeText(window.location.href);
-        alert("✅ Post link copied to clipboard!");
-      }}
-      className="justify-start text-sm hover:bg-blue-500/15 hover:text-blue-600 
-                 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      🔗 Copy Link
-    </Button>
-
-    <Button
-      variant="outline"
-      onClick={() =>
-        window.open(
-          `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
-          "_blank"
-        )
-      }
-      className="justify-start text-sm hover:bg-blue-400/20 hover:text-blue-500 
-                 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      🐦 Share on X (Twitter)
-    </Button>
-
-    <Button
-      variant="outline"
-      onClick={() =>
-        window.open(
-          `https://api.whatsapp.com/send?text=${encodeURIComponent(window.location.href)}`,
-          "_blank"
-        )
-      }
-      className="justify-start text-sm hover:bg-green-500/15 hover:text-green-600 
-                 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      💬 Share on WhatsApp
-    </Button>
-
-    <Button
-      variant="outline"
-      onClick={() =>
-        (window.location.href = `mailto:?subject=Check this post&body=${encodeURIComponent(window.location.href)}`)
-      }
-      className="justify-start text-sm hover:bg-orange-400/15 hover:text-orange-500 
-                 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      📧 Share via Email
-    </Button>
-  </div>
-</DialogContent>
-
-    </Dialog>
-
-    {/* Report */}
-    <Dialog open={reportDialog} onOpenChange={setReportDialog}>
-      <DialogTrigger asChild>
-        <DropdownMenuItem
-          className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg 
-                     text-danger transition-all duration-300 
-                     hover:bg-red-500/15 hover:text-red-600"
-          onSelect={(e) => e.preventDefault()}
-        >
-          <Flag className="h-4 w-4 text-red-500" />
-          <span>{isReported ? "Reported" : "Report"}</span>
-        </DropdownMenuItem>
-      </DialogTrigger>
-
-      <DialogContent className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-foreground">
-            Report Post
-          </DialogTitle>
-        </DialogHeader>
-
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Are you sure you want to report this post? It will be reviewed by moderators or concerned authorities.
-        </p>
-
-        <DialogFooter className="mt-4 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setReportDialog(false)} className="border-border/60">
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleReport}
-            className="bg-red-600 hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+          <DropdownMenuContent
+            align="end"
+            className="mt-2 w-44 rounded-xl border border-border/50 bg-card/90 shadow-lg backdrop-blur-md text-sm p-1 animate-in fade-in-0 zoom-in-95"
           >
-            Confirm Report
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </DropdownMenuContent>
-</DropdownMenu>
+            {/* Share */}
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert("✅ Post link copied to clipboard!");
+              }}
+              className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-600"
+            >
+              <Share2 className="h-4 w-4 text-blue-500" />
+              <span>Share</span>
+            </DropdownMenuItem>
 
-{isReported && (
-  <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2 font-medium">
-    <CheckCircle2 className="h-4 w-4" /> Reported
-  </span>
-)}
+            {/* Report */}
+            <Dialog open={reportDialog} onOpenChange={setReportDialog}>
+              <DialogTrigger asChild>
+                <DropdownMenuItem
+                  className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg text-danger hover:bg-red-500/15 hover:text-red-600"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Flag className="h-4 w-4 text-red-500" />
+                  <span>{isReported ? "Reported" : "Report"}</span>
+                </DropdownMenuItem>
+              </DialogTrigger>
 
+              <DialogContent className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-semibold text-foreground">
+                    Report Post
+                  </DialogTitle>
+                </DialogHeader>
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Are you sure you want to report this post? It will be reviewed by moderators or concerned authorities.
+                </p>
+
+                <DialogFooter className="mt-4 flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setReportDialog(false)}
+                    className="border-border/60"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleReport}
+                    className="bg-red-600 hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+                  >
+                    Confirm Report
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Reported Indicator */}
         {isReported && (
-          <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2">
+          <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2 font-medium">
             <CheckCircle2 className="h-4 w-4" /> Reported
           </span>
         )}
