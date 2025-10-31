@@ -1,30 +1,40 @@
-const express = require("express"); 
+const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
-const app = express();
-app.use(cors());
-app.use(express.json()); 
+const authRoutes = require("./routes/authRoutes");
 
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.error("Error:", err));
+const app = express();
+app.use(
+  cors({
+    origin: "http://localhost:8080",
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error("MongoDB Connection Error:", err));
+
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
-    res.send("root Page");
+  res.send("Root Page");
 });
+
 app.get("/health", async (req, res) => {
-  const dbState = mongoose.connection.readyState; // 0 = disconnected, 1 = connected
+  const dbState = mongoose.connection.readyState;
   res.json({
     status: "Backend running",
     database: dbState === 1 ? "MongoDB connected" : "MongoDB not connected",
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 });
 
-const PORT = 8080;
+const PORT = 8081;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

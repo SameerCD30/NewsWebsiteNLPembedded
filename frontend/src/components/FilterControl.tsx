@@ -10,19 +10,24 @@ export const FilterControl = () => {
 
   return (
     <div className="flex justify-center mb-10">
-      <div className="inline-flex rounded-full bg-card/80 border border-border/60 p-1.5 shadow-xl backdrop-blur-sm">
+      <div className="inline-flex rounded-full bg-zinc-900/60 border border-zinc-700 p-1.5 shadow-lg backdrop-blur-sm">
         {filters.map((filter) => (
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
             className={cn(
-              "px-8 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 relative",
+              "relative px-8 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 overflow-hidden",
               activeFilter === filter
-                ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                ? "text-white bg-gradient-to-r from-red-500 to-orange-400 shadow-[0_0_10px_rgba(255,87,34,0.5)] scale-105"
+                : "text-zinc-300 hover:text-white hover:bg-zinc-800/70"
             )}
           >
             {filter}
+
+            {/* Subtle glow animation on active button */}
+            {activeFilter === filter && (
+              <span className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 to-orange-400 opacity-30 blur-md animate-pulse -z-10" />
+            )}
           </button>
         ))}
       </div>

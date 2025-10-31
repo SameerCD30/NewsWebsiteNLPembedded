@@ -6,11 +6,11 @@ import {
   Share2,
   Flag,
   CheckCircle2,
-  Building2,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Separator } from "./ui/separator";
+import { CommentSection } from "./CommentSection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,10 +26,6 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "./ui/dialog";
-import { Separator } from "./ui/separator";
-import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { CommentSection } from "./CommentSection";
 
 interface PostCardProps {
   author: string;
@@ -40,7 +36,11 @@ interface PostCardProps {
   tag?: string;
   image?: string;
   location?: string;
+  initialReportCount?: number; // 👈 added for tracking report count
 }
+
+// 👇 Number of reports required to show the "Potentially fake" label
+const REPORT_THRESHOLD = 3;
 
 export const PostCard = ({
   author,
@@ -51,41 +51,51 @@ export const PostCard = ({
   tag,
   image,
   location,
+  initialReportCount = 0,
 }: PostCardProps) => {
   const [votes, setVotes] = useState(upvotes);
-  const [showVoteBreakdown, setShowVoteBreakdown] = useState(false);
   const [isReported, setIsReported] = useState(false);
   const [reportDialog, setReportDialog] = useState(false);
-  const [authorityDialog, setAuthorityDialog] = useState(false);
-  const [authorityTag, setAuthorityTag] = useState<string | null>(null);
-  const [showComments, setShowComments] = useState(false); // 👈 NEW STATE
+  const [showComments, setShowComments] = useState(false);
+  const [reportCount, setReportCount] = useState(initialReportCount);
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase();
-  };
 
   const handleUpvote = () => setVotes((prev) => prev + 1);
-  const handleReport = () => {
+
+  const handleReport = async () => {
+    if (isReported) return;
+
     setIsReported(true);
     setReportDialog(false);
+
+    try {
+      // 🔧 Example backend call
+      // Replace `/api/report/${postId}` with your real endpoint
+      const res = await fetch(`/api/report/${author}`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to report");
+      const data = await res.json();
+
+      // Update report count (backend should return updated count)
+      const newCount =
+        typeof data.reportCount === "number"
+          ? data.reportCount
+          : reportCount + 1;
+
+      setReportCount(newCount);
+    } catch (err) {
+      console.error(err);
+      // Optionally show toast or revert
+      setReportCount((prev) => prev + 1);
+    }
   };
 
-  const handleTagAuthority = (selected: string) => {
-    setAuthorityTag(selected);
-    setAuthorityDialog(false);
-  };
-
-  const toggleComments = () => setShowComments((prev) => !prev); // 👈 TOGGLE FUNCTION
-
-  const voteBreakdown = {
-    local: Math.floor(votes * 0.5),
-    state: Math.floor(votes * 0.3),
-    national: Math.floor(votes * 0.2),
-  };
+  const toggleComments = () => setShowComments((prev) => !prev);
 
   const tagColors: Record<string, string> = {
     Fake: "bg-red-100 text-red-700 border-red-300",
@@ -93,20 +103,12 @@ export const PostCard = ({
     Pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
   };
 
-  const authorityColors: Record<string, string> = {
-    Municipal: "bg-blue-100 text-blue-700 border-blue-300",
-    Water: "bg-cyan-100 text-cyan-700 border-cyan-300",
-    Police: "bg-indigo-100 text-indigo-700 border-indigo-300",
-    Electricity: "bg-amber-100 text-amber-700 border-amber-300",
-    Other: "bg-gray-100 text-gray-700 border-gray-300",
-  };
-
   return (
     <article className="bg-card rounded-xl border border-border/60 p-6 hover:border-primary/50 hover:shadow-xl transition-all duration-300 group">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all duration-200 group-hover:ring-primary/40">
+          <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
             <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold">
               {getInitials(author)}
             </AvatarFallback>
@@ -117,22 +119,23 @@ export const PostCard = ({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        {/* Tag section */}
+        <div className="flex items-center gap-2">
           {tag && (
             <Badge
               variant="outline"
-              className={`${tagColors[tag] || "bg-primary/5 text-primary border-primary/40"} px-3 py-1 font-medium`}
+              className={`${
+                tagColors[tag] || "bg-primary/5 text-primary border-primary/40"
+              } px-3 py-1 font-medium`}
             >
               {tag}
             </Badge>
           )}
 
-          {authorityTag && (
-            <Badge
-              variant="outline"
-              className={`${authorityColors[authorityTag] || "bg-gray-100"} px-3 py-1 font-medium flex items-center gap-1.5`}
-            >
-              <Building2 className="h-4 w-4" /> {authorityTag}
+          {/* 👇 Show “Potentially Fake” only when reportCount >= threshold */}
+          {reportCount >= REPORT_THRESHOLD && (
+            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
+              Potentially Fake
             </Badge>
           )}
         </div>
@@ -161,41 +164,19 @@ export const PostCard = ({
       {/* Footer */}
       <div className="flex items-center gap-6 pt-2">
         {/* Upvote */}
-        <Popover open={showVoteBreakdown} onOpenChange={setShowVoteBreakdown}>
-          <PopoverTrigger asChild>
-            <button
-              aria-label="Upvote post"
-              onClick={handleUpvote}
-              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110 group/vote"
-            >
-              <ArrowUp className="h-5 w-5 group-hover/vote:translate-y-[-2px] transition-transform duration-200" />
-              <span className="text-sm font-semibold">{votes}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 p-0 shadow-xl border-border/60" align="start">
-            <div className="p-5 space-y-4">
-              <h4 className="font-bold text-sm text-foreground">Vote Breakdown</h4>
-              <div className="space-y-3">
-                {Object.entries(voteBreakdown).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between hover:bg-muted/30 -mx-2 px-2 py-1.5 rounded-md transition-colors"
-                  >
-                    <span className="capitalize text-sm text-muted-foreground font-medium">{key}</span>
-                    <Button variant="secondary" size="sm" className="h-7 px-4 shadow-md">
-                      {value}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <button
+          aria-label="Upvote post"
+          onClick={handleUpvote}
+          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
+        >
+          <ArrowUp className="h-5 w-5" />
+          <span className="text-sm font-semibold">{votes}</span>
+        </button>
 
         {/* Comments */}
         <button
           aria-label="View comments"
-          onClick={toggleComments} // 👈 toggles the comment section
+          onClick={toggleComments}
           className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
         >
           <MessageCircle className="h-5 w-5" />
@@ -207,80 +188,64 @@ export const PostCard = ({
           <DropdownMenuTrigger asChild>
             <button
               aria-label="More actions"
-              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 ml-auto hover:scale-110"
+              className="flex items-center gap-2 ml-auto text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110 p-2 rounded-full hover:bg-muted/30 backdrop-blur-sm"
             >
               <MoreVertical className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="shadow-xl border-border/60">
+          <DropdownMenuContent
+            align="end"
+            className="mt-2 w-44 rounded-xl border border-border/50 bg-card/90 shadow-lg backdrop-blur-md text-sm p-1 animate-in fade-in-0 zoom-in-95"
+          >
             {/* Share */}
-            <DropdownMenuItem className="cursor-pointer hover:bg-muted/50 transition-colors">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert("✅ Post link copied to clipboard!");
+              }}
+              className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-600"
+            >
+              <Share2 className="h-4 w-4 text-blue-500" />
+              <span>Share</span>
             </DropdownMenuItem>
-
-            {/* Tag Authority */}
-            <Dialog open={authorityDialog} onOpenChange={setAuthorityDialog}>
-              <DialogTrigger asChild>
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Tag Authority
-                </DropdownMenuItem>
-              </DialogTrigger>
-
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Tag Authority</DialogTitle>
-                </DialogHeader>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Choose the department best suited to handle this issue.
-                </p>
-
-                <RadioGroup onValueChange={handleTagAuthority}>
-                  {["Municipal", "Water", "Electricity", "Police", "Other"].map((dept) => (
-                    <div key={dept} className="flex items-center space-x-3">
-                      <RadioGroupItem value={dept} id={dept} />
-                      <Label htmlFor={dept}>{dept} Department</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-
-                <DialogFooter className="mt-4 flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setAuthorityDialog(false)}>
-                    Cancel
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
 
             {/* Report */}
             <Dialog open={reportDialog} onOpenChange={setReportDialog}>
               <DialogTrigger asChild>
                 <DropdownMenuItem
-                  className="cursor-pointer text-danger hover:bg-danger/10 transition-colors"
+                  className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg text-danger hover:bg-red-500/15 hover:text-red-600"
                   onSelect={(e) => e.preventDefault()}
                 >
-                  <Flag className="h-4 w-4 mr-2" />
-                  {isReported ? "Reported" : "Report"}
+                  <Flag className="h-4 w-4 text-red-500" />
+                  <span>{isReported ? "Reported" : "Report"}</span>
                 </DropdownMenuItem>
               </DialogTrigger>
 
-              <DialogContent>
+              <DialogContent className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle>Report Post</DialogTitle>
+                  <DialogTitle className="text-lg font-semibold text-foreground">
+                    Report Post
+                  </DialogTitle>
                 </DialogHeader>
-                <p className="text-sm text-muted-foreground">
+
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Are you sure you want to report this post? It will be reviewed by moderators or concerned authorities.
                 </p>
+
                 <DialogFooter className="mt-4 flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setReportDialog(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setReportDialog(false)}
+                    className="border-border/60"
+                  >
                     Cancel
                   </Button>
-                  <Button variant="destructive" onClick={handleReport}>
+                  <Button
+                    variant="destructive"
+                    onClick={handleReport}
+                    className="bg-red-600 hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+                  >
                     Confirm Report
                   </Button>
                 </DialogFooter>
@@ -289,14 +254,15 @@ export const PostCard = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Reported Indicator */}
         {isReported && (
-          <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2">
+          <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2 font-medium">
             <CheckCircle2 className="h-4 w-4" /> Reported
           </span>
         )}
       </div>
 
-      {/* Comment Section (Shown only when clicked) */}
+      {/* Comment Section */}
       {showComments && (
         <div className="mt-3">
           <CommentSection />
