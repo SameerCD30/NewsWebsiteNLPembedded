@@ -1,61 +1,76 @@
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { CreatePostSheet } from "@/components/CreatePostSheet";
 import { FilterControl } from "@/components/FilterControl";
 import { PostCard } from "@/components/PostCard";
+import { fetchPosts } from "@/api/api";
+
+interface Post {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  image?: string;
+  createdAt: string;
+  user?: {
+    username?: string;
+    email?: string;
+  };
+  upvotes?: number;
+  comments?: any[];
+}
 
 const Index = () => {
-  const posts = [
-    {
-      author: "Vikram Ghai",
-      timestamp: "2h ago",
-      content: "The street light near the community park has been broken for two weeks. It's creating safety concerns for evening walkers.",
-      upvotes: 24,
-      comments: 2,
-      tag: "Potentially fake",
-      image: "https://images.unsplash.com/photo-1578678809746-0b29d7d19f1a?w=800&h=600&fit=crop",
-    },
-    {
-      author: "Sarah Mateo",
-      timestamp: "5h ago",
-      content: "Large pothole causing damage to vehicles. Needs immediate attention before someone gets hurt.",
-      upvotes: 18,
-      comments: 5,
-      tag: "Potentially fake",
-      image: "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?w=800&h=600&fit=crop",
-    },
-    {
-      author: "Mike Johnson",
-      timestamp: "8h ago",
-      content: "The local playground equipment is rusting and becoming unsafe for children. Several parents have raised concerns.",
-      upvotes: 32,
-      comments: 12,
-      image: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&h=600&fit=crop",
-    },
-    {
-      author: "Emily Clark",
-      timestamp: "1d ago",
-      content: "Broken traffic signal at Main St intersection causing dangerous situations during rush hour. Please fix urgently!",
-      upvotes: 45,
-      comments: 8,
-      tag: "Potentially fake",
-      image: "https://images.unsplash.com/photo-1496247749665-49cf5b1022e9?w=800&h=600&fit=crop",
-    },
-  ];
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        const res = await fetchPosts();
+        console.log("✅ Fetched posts:", res.data);
+        setPosts(res.data);
+      } catch (err: any) {
+        console.error("❌ Error fetching posts:", err);
+        setError("Failed to load posts. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPosts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <Header />
       <CreatePostSheet />
-      
+
       <main className="pt-16 min-h-screen">
         <div className="max-w-4xl mx-auto px-8 py-12">
+          {/* Filter Section */}
           <FilterControl />
-          
-          <div className="space-y-8">
-            {posts.map((post, index) => (
-              <PostCard key={index} {...post} />
-            ))}
-          </div>
+
+          {/* Status messages */}
+          {loading ? (
+            <p className="text-gray-400 text-center mt-10 animate-pulse">
+              Loading posts...
+            </p>
+          ) : error ? (
+            <p className="text-red-500 text-center mt-10">{error}</p>
+          ) : posts.length === 0 ? (
+            <p className="text-gray-500 text-center mt-10">
+              No issues reported yet. Be the first to upload!
+            </p>
+          ) : (
+            <div className="space-y-8">
+              {posts.map((post) => (
+                <PostCard key={post._id} post={post} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

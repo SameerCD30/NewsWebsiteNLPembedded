@@ -4,11 +4,13 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const postRoutes = require("./routes/postRoutes");
 
 const app = express();
+
 app.use(
   cors({
-    origin: ["http://localhost:8080", "http://localhost:5173"], // allow both ports
+    origin: ["http://localhost:8080", "http://localhost:5173"], 
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -22,6 +24,7 @@ mongoose
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/api", postRoutes);
 
 app.get("/", (req, res) => {
   res.send("Root Page");

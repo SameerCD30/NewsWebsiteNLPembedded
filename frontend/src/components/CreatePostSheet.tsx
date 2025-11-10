@@ -1,3 +1,4 @@
+import { createPost } from "../api/api";
 import { useState } from "react";
 import { Plus, X, Upload } from "lucide-react";
 import {
@@ -36,15 +37,38 @@ export const CreatePostSheet = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log({ title, description, location, image, tagAuthority });
+  const handleSubmit = async () => {
+  if (!title || !description || !location || !tagAuthority) {
+    alert("⚠️ Please fill in all required fields.");
+    return;
+  }
+
+  try {
+    const postData = {
+      title,
+      description,
+      location,
+      category: tagAuthority,
+      image,
+    };
+
+    
+    const res = await createPost(postData);
+    console.log("Post created:", res.data);
+    alert(" Issue uploaded successfully!");
     setOpen(false);
+
+
     setTitle("");
     setDescription("");
     setLocation("");
     setImage(null);
     setTagAuthority("");
-  };
+  } catch (error: any) {
+    console.error("Error creating post:", error);
+    alert(error.response?.data?.message || " Failed to upload issue.");
+  }
+};
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

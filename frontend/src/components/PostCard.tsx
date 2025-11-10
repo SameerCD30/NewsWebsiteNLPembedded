@@ -27,37 +27,45 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 
-interface PostCardProps {
-  author: string;
-  timestamp: string;
-  content: string;
-  upvotes: number;
-  comments: number;
-  tag?: string;
+interface Post {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
   image?: string;
   location?: string;
-  initialReportCount?: number; // 👈 added for tracking report count
+  createdAt: string;
+  user?: {
+    username?: string;
+    email?: string;
+  };
+  upvotes?: number;
+  comments?: any[];
 }
 
-// 👇 Number of reports required to show the "Potentially fake" label
+interface PostCardProps {
+  post: Post;
+}
+
+// Number of reports required to show the "Potentially fake" label
 const REPORT_THRESHOLD = 3;
 
-export const PostCard = ({
-  author,
-  timestamp,
-  content,
-  upvotes,
-  comments,
-  tag,
-  image,
-  location,
-  initialReportCount = 0,
-}: PostCardProps) => {
-  const [votes, setVotes] = useState(upvotes);
+export const PostCard = ({ post }: PostCardProps) => {
+  const [votes, setVotes] = useState(post.upvotes || 0);
   const [isReported, setIsReported] = useState(false);
   const [reportDialog, setReportDialog] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [reportCount, setReportCount] = useState(initialReportCount);
+  const [reportCount, setReportCount] = useState(0);
+
+  const author = post.user?.username || "Anonymous";
+  const timestamp = new Date(post.createdAt).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const content = post.description;
+  const tag = post.category;
+  const image = post.image;
+  const location = post.location;
 
   const getInitials = (name: string) =>
     name
@@ -75,13 +83,10 @@ export const PostCard = ({
     setReportDialog(false);
 
     try {
-      // 🔧 Example backend call
-      // Replace `/api/report/${postId}` with your real endpoint
-      const res = await fetch(`/api/report/${author}`, { method: "POST" });
+      const res = await fetch(`/api/report/${post._id}`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to report");
       const data = await res.json();
 
-      // Update report count (backend should return updated count)
       const newCount =
         typeof data.reportCount === "number"
           ? data.reportCount
@@ -90,7 +95,6 @@ export const PostCard = ({
       setReportCount(newCount);
     } catch (err) {
       console.error(err);
-      // Optionally show toast or revert
       setReportCount((prev) => prev + 1);
     }
   };
@@ -114,7 +118,9 @@ export const PostCard = ({
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-semibold text-foreground text-base">{author}</span>
+            <span className="font-semibold text-foreground text-base">
+              {author}
+            </span>
             <span className="text-sm text-muted-foreground/80">{timestamp}</span>
           </div>
         </div>
@@ -132,7 +138,6 @@ export const PostCard = ({
             </Badge>
           )}
 
-          {/* 👇 Show “Potentially Fake” only when reportCount >= threshold */}
           {reportCount >= REPORT_THRESHOLD && (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
               Potentially Fake
@@ -142,7 +147,9 @@ export const PostCard = ({
       </div>
 
       {/* Content */}
-      <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">{content}</p>
+      <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">
+        {content}
+      </p>
 
       {/* Image */}
       {image && (
@@ -157,7 +164,9 @@ export const PostCard = ({
       )}
 
       {/* Location */}
-      {location && <p className="text-sm text-muted-foreground mb-4">📍 {location}</p>}
+      {location && (
+        <p className="text-sm text-muted-foreground mb-4">📍 {location}</p>
+      )}
 
       <Separator className="mb-3" />
 
@@ -180,7 +189,9 @@ export const PostCard = ({
           className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
         >
           <MessageCircle className="h-5 w-5" />
-          <span className="text-sm font-semibold">{comments}</span>
+          <span className="text-sm font-semibold">
+            {post.comments?.length || 0}
+          </span>
         </button>
 
         {/* Dropdown */}
@@ -230,7 +241,8 @@ export const PostCard = ({
                 </DialogHeader>
 
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Are you sure you want to report this post? It will be reviewed by moderators or concerned authorities.
+                  Are you sure you want to report this post? It will be reviewed
+                  by moderators or concerned authorities.
                 </p>
 
                 <DialogFooter className="mt-4 flex justify-end gap-2">
@@ -262,12 +274,7 @@ export const PostCard = ({
         )}
       </div>
 
-      {/* Comment Section */}
-      {showComments && (
-        <div className="mt-3">
-          <CommentSection />
-        </div>
-      )}
+
     </article>
   );
 };
