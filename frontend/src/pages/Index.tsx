@@ -30,10 +30,10 @@ const Index = () => {
     const loadPosts = async () => {
       try {
         const res = await fetchPosts();
-        console.log("✅ Fetched posts:", res.data);
+        console.log("Fetched posts:", res.data);
         setPosts(res.data);
       } catch (err: any) {
-        console.error("❌ Error fetching posts:", err);
+        console.error(" Error fetching posts:", err);
         setError("Failed to load posts. Please try again later.");
       } finally {
         setLoading(false);

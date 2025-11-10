@@ -213,7 +213,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <DropdownMenuItem
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
-                alert("✅ Post link copied to clipboard!");
+                alert(" Post link copied to clipboard!");
               }}
               className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-600"
             >
