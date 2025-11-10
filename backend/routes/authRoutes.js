@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post("/signup", async (req, res) => {
   try {
+    console.log("Signup request body:", req.body); 
     const { username, email, password } = req.body;
 
     if (!username || !email || !password)
@@ -20,10 +21,11 @@ router.post("/signup", async (req, res) => {
 
     res.status(201).json({ message: "Signup successful" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Signup Error:", err); 
+    res.status(500).json({ message: "Server error", error: err.message }); 
   }
 });
+
 
 router.post("/login", async (req, res) => {
   try {

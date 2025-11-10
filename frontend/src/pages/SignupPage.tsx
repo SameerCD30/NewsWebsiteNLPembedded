@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -20,6 +20,8 @@ export default function SignupPage() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  console.log("API URL being used:", API_BASE_URL);
 
   const handleSignup = async () => {
     const { firstName, lastName, dob, email, username, password, confirmPassword } =
