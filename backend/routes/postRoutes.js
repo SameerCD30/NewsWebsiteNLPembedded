@@ -27,7 +27,7 @@ router.post("/posts", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    console.log("📩 New Post Received:", req.body);
+    console.log("New Post Received:", req.body);
 
     // NLP model placeholder
     const isIssue = true;
@@ -52,13 +52,56 @@ router.post("/posts", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/posts", async (req, res) => {
+router.post("/posts", authMiddleware, async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 });
+    const { title, description, category, location, image } = req.body;
+
+    if (!title || !description || !category || !location) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    console.log("New Post Received:", req.body);
+
+    const newPost = new Post({
+      title,
+      description,
+      category,
+      location,
+      image,
+      user: req.user.id,
+    });
+
+    await newPost.save();
+    await newPost.populate("user", "username email profilePic");
+    console.log("Post saved successfully:", newPost._id);
+    res.status(201).json({ message: "Post created successfully", post: newPost });
+  } catch (err) {
+    console.error("Post creation error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.get("/myposts", authMiddleware, async (req, res) => {
+  try {
+    const posts = await Post.find({ user: req.user.id })
+      .populate("user", "username email profilePic") 
+      .sort({ createdAt: -1 });
     res.status(200).json(posts);
   } catch (err) {
-    console.error("Error fetching posts:", err);
-    res.status(500).json({ message: "Failed to fetch posts" });
+    console.error("Error fetching user posts:", err);
+    res.status(500).json({ message: "Failed to fetch your posts" });
+  }
+});
+
+
+router.get("/posts/mine", authMiddleware, async (req, res) => {
+  try {
+    // req.user.id comes from your JWT decoded token
+    const posts = await Post.find({ user: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json(posts);
+  } catch (err) {
+    console.error("Error fetching user's posts:", err);
+    res.status(500).json({ message: "Failed to fetch user posts" });
   }
 });
 

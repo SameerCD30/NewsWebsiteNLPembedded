@@ -24,6 +24,8 @@ export const registerUser = (data: { username: string; email: string; password: 
 // Post endpoints
 // ========================
 export const fetchPosts = () => API.get("/posts");
+export const fetchMyPosts = () => API.get("/myposts");
+export const fetchCurrentUser = () => API.get("/auth/me");
 export const createPost = (data: any) => API.post("/posts", data);
 export const upvotePost = (postId: string) => API.post(`/posts/${postId}/upvote`);
 export const reportPost = (postId: string) => API.post(`/posts/${postId}/report`);

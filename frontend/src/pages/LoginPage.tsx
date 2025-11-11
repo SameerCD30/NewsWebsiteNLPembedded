@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../api/api";
-
-interface LoginResponse {
-  token: string;
-}
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -12,6 +9,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); //  use context
 
   const handleLogin = async () => {
     setErrorMessage("");
@@ -23,15 +21,12 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const response = (await loginUser({ email: identifier, password })) as any;
-      const data: LoginResponse = response?.data ?? response;
+      const response = await loginUser({ email: identifier, password });
+      const { token, user } = response.data;
 
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-      } else {
-        throw new Error("No token returned from server.");
-      }
+      if (!token || !user) throw new Error("Invalid login response.");
 
+      login(user, token); // updates context and triggers Header rerender
       alert("Login successful!");
       navigate("/");
     } catch (err: any) {

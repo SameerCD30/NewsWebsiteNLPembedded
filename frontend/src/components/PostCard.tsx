@@ -27,15 +27,17 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 
-interface Post {
+// Match your backend Post schema
+export interface Post {
   _id: string;
   title: string;
   description: string;
   category: string;
+  location: string;
   image?: string;
-  location?: string;
   createdAt: string;
   user?: {
+    _id?: string;
     username?: string;
     email?: string;
   };
@@ -47,7 +49,7 @@ interface PostCardProps {
   post: Post;
 }
 
-// Number of reports required to show the "Potentially fake" label
+// Minimum reports before showing “Potentially Fake”
 const REPORT_THRESHOLD = 3;
 
 export const PostCard = ({ post }: PostCardProps) => {
@@ -62,23 +64,11 @@ export const PostCard = ({ post }: PostCardProps) => {
     dateStyle: "medium",
     timeStyle: "short",
   });
-  const content = post.description;
-  const tag = post.category;
-  const image = post.image;
-  const location = post.location;
-
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
 
   const handleUpvote = () => setVotes((prev) => prev + 1);
 
   const handleReport = async () => {
     if (isReported) return;
-
     setIsReported(true);
     setReportDialog(false);
 
@@ -94,17 +84,26 @@ export const PostCard = ({ post }: PostCardProps) => {
 
       setReportCount(newCount);
     } catch (err) {
-      console.error(err);
+      console.error("Error reporting post:", err);
       setReportCount((prev) => prev + 1);
     }
   };
 
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+
   const toggleComments = () => setShowComments((prev) => !prev);
 
   const tagColors: Record<string, string> = {
-    Fake: "bg-red-100 text-red-700 border-red-300",
-    Real: "bg-green-100 text-green-700 border-green-300",
-    Pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    Municipal: "bg-blue-100 text-blue-700 border-blue-300",
+    Water: "bg-cyan-100 text-cyan-700 border-cyan-300",
+    Electricity: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    Police: "bg-purple-100 text-purple-700 border-purple-300",
+    Other: "bg-gray-100 text-gray-700 border-gray-300",
   };
 
   return (
@@ -121,23 +120,27 @@ export const PostCard = ({ post }: PostCardProps) => {
             <span className="font-semibold text-foreground text-base">
               {author}
             </span>
-            <span className="text-sm text-muted-foreground/80">{timestamp}</span>
+            <span className="text-sm text-muted-foreground/80">
+              {timestamp}
+            </span>
           </div>
         </div>
 
-        {/* Tag section */}
+        {/* Category Tag */}
         <div className="flex items-center gap-2">
-          {tag && (
+          {post.category && (
             <Badge
               variant="outline"
               className={`${
-                tagColors[tag] || "bg-primary/5 text-primary border-primary/40"
+                tagColors[post.category] ||
+                "bg-primary/5 text-primary border-primary/40"
               } px-3 py-1 font-medium`}
             >
-              {tag}
+              {post.category}
             </Badge>
           )}
 
+          {/* Potentially Fake Tag */}
           {reportCount >= REPORT_THRESHOLD && (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
               Potentially Fake
@@ -146,16 +149,16 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Description */}
       <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">
-        {content}
+        {post.description}
       </p>
 
       {/* Image */}
-      {image && (
+      {post.image && (
         <div className="mb-5 -mx-6 px-6">
           <img
-            src={image}
+            src={post.image}
             alt="Post image"
             className="w-full h-80 object-cover rounded-xl shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300"
             loading="lazy"
@@ -164,8 +167,10 @@ export const PostCard = ({ post }: PostCardProps) => {
       )}
 
       {/* Location */}
-      {location && (
-        <p className="text-sm text-muted-foreground mb-4">📍 {location}</p>
+      {post.location && (
+        <p className="text-sm text-muted-foreground mb-4">
+           {post.location}
+        </p>
       )}
 
       <Separator className="mb-3" />
@@ -213,7 +218,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <DropdownMenuItem
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
-                alert(" Post link copied to clipboard!");
+                alert("Post link copied to clipboard!");
               }}
               className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-600"
             >
@@ -274,7 +279,12 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
-
+      {/* Comments Section */}
+      {showComments && (
+        <div className="mt-3">
+          <CommentSection />
+        </div>
+      )}
     </article>
   );
 };
