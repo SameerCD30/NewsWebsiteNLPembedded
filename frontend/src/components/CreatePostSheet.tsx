@@ -1,4 +1,5 @@
 import { createPost } from "../api/api";
+import { MapPicker } from "@/components/MapPicker";
 import { useState } from "react";
 import { Plus, X, Upload } from "lucide-react";
 import {
@@ -24,9 +25,26 @@ export const CreatePostSheet = () => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState<{
+    lat?: number;
+    lng?: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    landmark?: string;
+  } | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [tagAuthority, setTagAuthority] = useState("");
+  const [showMap, setShowMap] = useState(false);
+
+  const handleOpenClick = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in to create a post.");
+      return;
+    }
+    setOpen(true);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,51 +56,53 @@ export const CreatePostSheet = () => {
   };
 
   const handleSubmit = async () => {
-  if (!title || !description || !location || !tagAuthority) {
-    alert("⚠️ Please fill in all required fields.");
-    return;
-  }
+    if (!title || !description || !location?.address || !tagAuthority) {
+      alert("⚠️ Please fill in all required fields.");
+      return;
+    }
 
-  try {
-    const postData = {
-      title,
-      description,
-      location,
-      category: tagAuthority,
-      image,
-    };
+    try {
+      const postData = {
+        title,
+        description,
+        category: tagAuthority,
+        image,
+        location: `${location.address}${location.landmark ? ", " + location.landmark : ""}`,
+        lat: location.lat,
+        lng: location.lng,
+        city: location.city,
+        state: location.state,
+      };
 
-    
-    const res = await createPost(postData);
-    console.log("Post created:", res.data);
-    alert(" Issue uploaded successfully!");
-    setOpen(false);
-
-
-    setTitle("");
-    setDescription("");
-    setLocation("");
-    setImage(null);
-    setTagAuthority("");
-  } catch (error: any) {
-    console.error("Error creating post:", error);
-    alert(error.response?.data?.message || " Failed to upload issue.");
-  }
-};
+      const res = await createPost(postData);
+      console.log("Post created:", res.data);
+      alert("✅ Issue uploaded successfully!");
+      setOpen(false);
+      setTitle("");
+      setDescription("");
+      setLocation(null);
+      setImage(null);
+      setTagAuthority("");
+    } catch (error: any) {
+      console.error("Error creating post:", error);
+      alert(error.response?.data?.message || "Failed to upload issue.");
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      {/* Create Post Button */}
       <SheetTrigger asChild>
-        <button className="fixed left-8 top-24 z-40 flex items-center gap-3 rounded-full 
-          bg-red-600 px-8 py-3.5 text-white font-semibold shadow-lg 
-          hover:bg-red-700 hover:scale-105 transition-all duration-300 group">
+        <button
+          onClick={handleOpenClick}
+          className="fixed left-8 top-24 z-40 flex items-center gap-3 rounded-full 
+            bg-red-600 px-8 py-3.5 text-white font-semibold shadow-lg 
+            hover:bg-red-700 hover:scale-105 transition-all duration-300 group"
+        >
           <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
           <span>Create Post</span>
         </button>
       </SheetTrigger>
 
-      {/* Sheet Content */}
       <SheetContent
         side="left"
         className="w-[400px] sm:w-[540px] overflow-y-auto border-r border-red-700/40
@@ -99,7 +119,6 @@ export const CreatePostSheet = () => {
         </SheetHeader>
 
         <div className="space-y-6 mt-8">
-          {/* Title */}
           <div className="space-y-3">
             <Label htmlFor="title" className="text-sm font-semibold text-gray-300">
               Title
@@ -114,7 +133,6 @@ export const CreatePostSheet = () => {
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-3">
             <Label htmlFor="description" className="text-sm font-semibold text-gray-300">
               Description
@@ -129,22 +147,53 @@ export const CreatePostSheet = () => {
             />
           </div>
 
-          {/* Location */}
           <div className="space-y-3">
-            <Label htmlFor="location" className="text-sm font-semibold text-gray-300">
-              Location
-            </Label>
-            <Input
-              id="location"
-              placeholder="Where is this issue located?"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="h-11 border border-gray-700 bg-[#1b1b1b] text-gray-100
-                focus:border-red-600 focus:ring-1 focus:ring-red-600/40 transition-all rounded-lg"
-            />
+            <Label className="text-sm font-semibold text-gray-300">Location</Label>
+
+            {!showMap && !location ? (
+              <Button
+                variant="outline"
+                onClick={() => setShowMap(true)}
+                className="w-full border border-gray-700 text-gray-200 hover:bg-[#242424]"
+              >
+                📍 Select on Map
+              </Button>
+            ) : showMap ? (
+              <div className="space-y-3">
+                <MapPicker
+                  onSelect={(loc) => {
+                    setLocation(loc);
+                    setShowMap(false);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-400 flex-1 truncate">
+                    {location?.address}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMap(true)}
+                    className="border border-gray-700 text-gray-300 hover:bg-[#242424] ml-2"
+                  >
+                    Change Location
+                  </Button>
+                </div>
+                <Input
+                  placeholder="Add landmark or nearby details (optional)"
+                  value={location?.landmark || ""}
+                  onChange={(e) =>
+                    setLocation((prev) => ({ ...prev, landmark: e.target.value }))
+                  }
+                  className="h-11 border border-gray-700 bg-[#1b1b1b] text-gray-100 focus:border-red-600 focus:ring-1 focus:ring-red-600/40 transition-all rounded-lg"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Tag Authority */}
           <div className="space-y-3">
             <Label htmlFor="tagAuthority" className="text-sm font-semibold text-gray-300">
               Tag Authority
@@ -167,7 +216,6 @@ export const CreatePostSheet = () => {
             </Select>
           </div>
 
-          {/* Image Upload */}
           <div className="space-y-3">
             <Label htmlFor="image" className="text-sm font-semibold text-gray-300">
               Add Image
@@ -210,7 +258,6 @@ export const CreatePostSheet = () => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex gap-3 pt-6">
             <Button
               variant="danger"

@@ -33,7 +33,7 @@ const Index = () => {
         console.log("Fetched posts:", res.data);
         setPosts(res.data);
       } catch (err: any) {
-        console.error(" Error fetching posts:", err);
+        console.error("Error fetching posts:", err);
         setError("Failed to load posts. Please try again later.");
       } finally {
         setLoading(false);
@@ -44,16 +44,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <Header />
       <CreatePostSheet />
 
       <main className="pt-16 min-h-screen">
         <div className="max-w-4xl mx-auto px-8 py-12">
-          {/* Filter Section */}
           <FilterControl />
 
-          {/* Status messages */}
           {loading ? (
             <p className="text-gray-400 text-center mt-10 animate-pulse">
               Loading posts...

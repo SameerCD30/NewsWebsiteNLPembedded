@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import {
   ArrowUp,
@@ -6,6 +7,7 @@ import {
   Share2,
   Flag,
   CheckCircle2,
+  MapPin,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Badge } from "./ui/badge";
@@ -26,8 +28,8 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "./ui/dialog";
+import { upvotePost, removeUpvote } from "@/api/api";
 
-// Match your backend Post schema
 export interface Post {
   _id: string;
   title: string;
@@ -43,17 +45,18 @@ export interface Post {
   };
   upvotes?: number;
   comments?: any[];
+  isUpvoted?: boolean;
 }
 
 interface PostCardProps {
   post: Post;
 }
 
-// Minimum reports before showing “Potentially Fake”
 const REPORT_THRESHOLD = 3;
 
 export const PostCard = ({ post }: PostCardProps) => {
   const [votes, setVotes] = useState(post.upvotes || 0);
+  const [isUpvoted, setIsUpvoted] = useState(post.isUpvoted || false);
   const [isReported, setIsReported] = useState(false);
   const [reportDialog, setReportDialog] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -65,26 +68,49 @@ export const PostCard = ({ post }: PostCardProps) => {
     timeStyle: "short",
   });
 
-  const handleUpvote = () => setVotes((prev) => prev + 1);
+  const handleUpvote = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in to upvote.");
+      return;
+    }
+    try {
+      if (isUpvoted) {
+        const res = await removeUpvote(post._id);
+        if (res.status === 200) {
+          setVotes((prev) => Math.max(prev - 1, 0));
+          setIsUpvoted(false);
+        }
+      } else {
+        const res = await upvotePost(post._id);
+        if (res.status === 200) {
+          setVotes((prev) => prev + 1);
+          setIsUpvoted(true);
+        }
+      }
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        alert("Please log in to upvote.");
+      } else {
+        alert(err.response?.data?.message || "Something went wrong.");
+      }
+    }
+  };
 
   const handleReport = async () => {
     if (isReported) return;
     setIsReported(true);
     setReportDialog(false);
-
     try {
       const res = await fetch(`/api/report/${post._id}`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to report");
       const data = await res.json();
-
       const newCount =
         typeof data.reportCount === "number"
           ? data.reportCount
           : reportCount + 1;
-
       setReportCount(newCount);
-    } catch (err) {
-      console.error("Error reporting post:", err);
+    } catch {
       setReportCount((prev) => prev + 1);
     }
   };
@@ -96,7 +122,9 @@ export const PostCard = ({ post }: PostCardProps) => {
       .join("")
       .toUpperCase();
 
-  const toggleComments = () => setShowComments((prev) => !prev);
+  const shortLocation = post.location
+    ? post.location.split(",").slice(0, 3).join(",")
+    : "";
 
   const tagColors: Record<string, string> = {
     Municipal: "bg-blue-100 text-blue-700 border-blue-300",
@@ -108,7 +136,6 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   return (
     <article className="bg-card rounded-xl border border-border/60 p-6 hover:border-primary/50 hover:shadow-xl transition-all duration-300 group">
-      {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
@@ -120,13 +147,23 @@ export const PostCard = ({ post }: PostCardProps) => {
             <span className="font-semibold text-foreground text-base">
               {author}
             </span>
-            <span className="text-sm text-muted-foreground/80">
-              {timestamp}
-            </span>
+            <span className="text-sm text-muted-foreground/80">{timestamp}</span>
+            <AnimatePresence>
+              {shortLocation && (
+                <motion.span
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-sm text-muted-foreground/70 flex items-center gap-1 mt-0.5"
+                >
+                  <MapPin className="h-4 w-4 text-orange-500" />
+                  {shortLocation}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-
-        {/* Category Tag */}
         <div className="flex items-center gap-2">
           {post.category && (
             <Badge
@@ -139,8 +176,6 @@ export const PostCard = ({ post }: PostCardProps) => {
               {post.category}
             </Badge>
           )}
-
-          {/* Potentially Fake Tag */}
           {reportCount >= REPORT_THRESHOLD && (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
               Potentially Fake
@@ -149,12 +184,14 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
       </div>
 
-      {/* Description */}
+      <h2 className="text-lg font-semibold text-foreground mb-3">
+        {post.title}
+      </h2>
+
       <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">
         {post.description}
       </p>
 
-      {/* Image */}
       {post.image && (
         <div className="mb-5 -mx-6 px-6">
           <img
@@ -166,31 +203,55 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
       )}
 
-      {/* Location */}
-      {post.location && (
-        <p className="text-sm text-muted-foreground mb-4">
-           {post.location}
-        </p>
-      )}
-
       <Separator className="mb-3" />
 
-      {/* Footer */}
       <div className="flex items-center gap-6 pt-2">
-        {/* Upvote */}
-        <button
-          aria-label="Upvote post"
+        <motion.button
+          aria-label={isUpvoted ? "Remove upvote" : "Upvote post"}
           onClick={handleUpvote}
-          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
+          whileTap={{ scale: 1.2 }}
+          className="relative flex items-center gap-2 transition-all duration-200 hover:scale-110"
         >
-          <ArrowUp className="h-5 w-5" />
-          <span className="text-sm font-semibold">{votes}</span>
-        </button>
+          <motion.div
+            initial={false}
+            animate={{
+              scale: isUpvoted ? [1, 1.3, 1] : [1.1, 1, 1],
+              rotate: isUpvoted ? [0, -15, 0] : 0,
+            }}
+            transition={{ duration: 0.3 }}
+            className="relative flex items-center justify-center"
+          >
+            <ArrowUp
+              className={`h-6 w-6 transition-colors duration-300 ${
+                isUpvoted
+                  ? "text-orange-500"
+                  : "text-gray-400 group-hover:text-orange-400"
+              }`}
+            />
+            <AnimatePresence>
+              {isUpvoted && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1.2, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0 bg-orange-500 rounded-full blur-md opacity-40"
+                />
+              )}
+            </AnimatePresence>
+          </motion.div>
+          <motion.span
+            animate={{ color: isUpvoted ? "#f97316" : "#9ca3af" }}
+            transition={{ duration: 0.2 }}
+            className="text-sm font-semibold"
+          >
+            {votes}
+          </motion.span>
+        </motion.button>
 
-        {/* Comments */}
         <button
           aria-label="View comments"
-          onClick={toggleComments}
+          onClick={() => setShowComments((prev) => !prev)}
           className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
         >
           <MessageCircle className="h-5 w-5" />
@@ -199,7 +260,6 @@ export const PostCard = ({ post }: PostCardProps) => {
           </span>
         </button>
 
-        {/* Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -209,12 +269,10 @@ export const PostCard = ({ post }: PostCardProps) => {
               <MoreVertical className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
-
           <DropdownMenuContent
             align="end"
             className="mt-2 w-44 rounded-xl border border-border/50 bg-card/90 shadow-lg backdrop-blur-md text-sm p-1 animate-in fade-in-0 zoom-in-95"
           >
-            {/* Share */}
             <DropdownMenuItem
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
@@ -225,8 +283,6 @@ export const PostCard = ({ post }: PostCardProps) => {
               <Share2 className="h-4 w-4 text-blue-500" />
               <span>Share</span>
             </DropdownMenuItem>
-
-            {/* Report */}
             <Dialog open={reportDialog} onOpenChange={setReportDialog}>
               <DialogTrigger asChild>
                 <DropdownMenuItem
@@ -237,19 +293,16 @@ export const PostCard = ({ post }: PostCardProps) => {
                   <span>{isReported ? "Reported" : "Report"}</span>
                 </DropdownMenuItem>
               </DialogTrigger>
-
               <DialogContent className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold text-foreground">
                     Report Post
                   </DialogTitle>
                 </DialogHeader>
-
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Are you sure you want to report this post? It will be reviewed
                   by moderators or concerned authorities.
                 </p>
-
                 <DialogFooter className="mt-4 flex justify-end gap-2">
                   <Button
                     variant="outline"
@@ -270,8 +323,6 @@ export const PostCard = ({ post }: PostCardProps) => {
             </Dialog>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Reported Indicator */}
         {isReported && (
           <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2 font-medium">
             <CheckCircle2 className="h-4 w-4" /> Reported
@@ -279,10 +330,9 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
-      {/* Comments Section */}
       {showComments && (
         <div className="mt-3">
-          <CommentSection />
+          <CommentSection postId={post._id} />
         </div>
       )}
     </article>
