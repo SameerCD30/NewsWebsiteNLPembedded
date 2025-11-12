@@ -31,6 +31,8 @@ export const CreatePostSheet = () => {
     address?: string;
     city?: string;
     state?: string;
+    country?: string;
+    pincode?: string;
     landmark?: string;
   } | null>(null);
   const [image, setImage] = useState<string | null>(null);
@@ -62,16 +64,36 @@ export const CreatePostSheet = () => {
     }
 
     try {
+      // ✅ Ensure city is populated from address if missing
+      if (!location.city && location.address) {
+        const addr = location.address.split(",");
+        const probableCity =
+          addr[addr.length - 3]?.trim() || addr[addr.length - 2]?.trim();
+        location.city = probableCity || "Unknown City";
+      }
+
+      // ✅ Extract pincode safely from address if not already provided
+      let pincode = location?.pincode;
+      if (!pincode && location?.address) {
+        const match = location.address.match(/\b\d{6}\b/);
+        pincode = match ? match[0] : "";
+      }
+
+      // ✅ Final payload structure
       const postData = {
         title,
         description,
         category: tagAuthority,
         image,
-        location: `${location.address}${location.landmark ? ", " + location.landmark : ""}`,
-        lat: location.lat,
-        lng: location.lng,
-        city: location.city,
-        state: location.state,
+        location: {
+          address: `${location.address}${location.landmark ? ", " + location.landmark : ""}`,
+          lat: location.lat,
+          lng: location.lng,
+          city: location.city,
+          state: location.state,
+          country: location.country,
+          pincode,
+        },
       };
 
       const res = await createPost(postData);
@@ -94,8 +116,8 @@ export const CreatePostSheet = () => {
       <SheetTrigger asChild>
         <button
           onClick={handleOpenClick}
-          className="fixed left-8 top-24 z-40 flex items-center gap-3 rounded-full 
-            bg-red-600 px-8 py-3.5 text-white font-semibold shadow-lg 
+          className="fixed top-24 left-10 z-50 flex items-center gap-3 rounded-full 
+            bg-red-600 px-6 py-3 text-white font-semibold shadow-lg 
             hover:bg-red-700 hover:scale-105 transition-all duration-300 group"
         >
           <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
@@ -114,7 +136,8 @@ export const CreatePostSheet = () => {
             Create New Post
           </SheetTitle>
           <p className="text-sm text-gray-400 leading-relaxed pt-1">
-            Share your grievance with the community. Tag the related department to help resolve it faster.
+            Share your grievance with the community. Tag the related department
+            to help resolve it faster.
           </p>
         </SheetHeader>
 

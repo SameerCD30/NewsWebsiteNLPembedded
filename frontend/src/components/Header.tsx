@@ -10,7 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-export const Header = () => {
+interface HeaderProps {
+  onChangeLocation: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onChangeLocation }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -34,10 +38,14 @@ export const Header = () => {
         <div className="flex items-center gap-6">
           {/* Change Location */}
           <button
+            type="button"
+            onClick={() => {
+              console.log("Change Location clicked!");
+              onChangeLocation();
+            }}
             className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105"
-            onClick={() => window.open("https://maps.google.com", "_blank")}
           >
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-primary pointer-events-none" />
             Change Location
           </button>
 
@@ -52,7 +60,7 @@ export const Header = () => {
                      hover:shadow-[0_6px_14px_rgba(255,0,0,0.6)] 
                      hover:scale-105 active:scale-95"
             >
-              Login / SignUp
+              Login / Sign Up
             </Button>
           ) : (
             <DropdownMenu>
@@ -97,3 +105,5 @@ export const Header = () => {
     </header>
   );
 };
+
+export default Header;

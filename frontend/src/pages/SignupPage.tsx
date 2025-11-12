@@ -17,15 +17,12 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  console.log("API URL being used:", API_BASE_URL);
-
   const handleSignup = async () => {
-    const { firstName, lastName, dob, email, username, password, confirmPassword } =
-      formData;
+    const { firstName, lastName, dob, email, username, password, confirmPassword } = formData;
     setErrorMessage("");
 
     if (!firstName || !lastName || !dob || !email || !username || !password || !confirmPassword) {
@@ -65,7 +62,6 @@ export default function SignupPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black p-6">
       <div className="relative w-full max-w-lg bg-gray-900 rounded-3xl shadow-2xl p-8 space-y-6 text-gray-100">
-        {/*  Cross button inside the card */}
         <button
           onClick={() => navigate("/")}
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"

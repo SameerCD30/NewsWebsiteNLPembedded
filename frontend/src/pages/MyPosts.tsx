@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { PostCard } from "@/components/PostCard";
-import { fetchMyPosts, fetchPosts } from "@/api/api";
+import { fetchMyPosts } from "@/api/api";
 import { useAuth } from "@/context/AuthContext";
 
 interface Post {
@@ -12,7 +12,7 @@ interface Post {
   location: string;
   image?: string;
   createdAt: string;
-   user?: {
+  user?: {
     _id?: string;
     username?: string;
     email?: string;
@@ -43,7 +43,9 @@ const MyPosts = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* ✅ Added a dummy onChangeLocation to prevent prop error */}
+      <Header onChangeLocation={() => {}} />
+
       <main className="pt-20 max-w-4xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-red-500 mb-8">My Posts</h2>
 

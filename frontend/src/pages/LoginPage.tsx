@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); //  use context
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     setErrorMessage("");
@@ -26,7 +26,7 @@ export default function LoginPage() {
 
       if (!token || !user) throw new Error("Invalid login response.");
 
-      login(user, token); // updates context and triggers Header rerender
+      login(user, token);
       alert("Login successful!");
       navigate("/");
     } catch (err: any) {
@@ -44,7 +44,6 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black p-6">
       <div className="relative w-full max-w-md bg-gray-900 rounded-3xl shadow-2xl p-8 space-y-6 text-gray-100">
-        {/*  Cross button inside card */}
         <button
           onClick={() => navigate("/")}
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
@@ -65,7 +64,6 @@ export default function LoginPage() {
             onChange={(e) => setIdentifier(e.target.value)}
             className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-
           <input
             type="password"
             placeholder="Password"

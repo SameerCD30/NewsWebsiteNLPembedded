@@ -29,24 +29,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { upvotePost, removeUpvote } from "@/api/api";
-
-export interface Post {
-  _id: string;
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  image?: string;
-  createdAt: string;
-  user?: {
-    _id?: string;
-    username?: string;
-    email?: string;
-  };
-  upvotes?: number;
-  comments?: any[];
-  isUpvoted?: boolean;
-}
+import { Post } from "@/types/post"; 
 
 interface PostCardProps {
   post: Post;
@@ -122,9 +105,15 @@ export const PostCard = ({ post }: PostCardProps) => {
       .join("")
       .toUpperCase();
 
-  const shortLocation = post.location
-    ? post.location.split(",").slice(0, 3).join(",")
-    : "";
+  let shortLocation = "";
+
+  if (typeof post.location === "string") {
+    shortLocation = post.location.split(",").slice(0, 3).join(",");
+  } else if (typeof post.location === "object" && post.location !== null) {
+    const { city, state, country } = post.location as any;
+    shortLocation = [city, state, country].filter(Boolean).join(", ");
+  }
+
 
   const tagColors: Record<string, string> = {
     Municipal: "bg-blue-100 text-blue-700 border-blue-300",
@@ -338,3 +327,5 @@ export const PostCard = ({ post }: PostCardProps) => {
     </article>
   );
 };
+
+export default PostCard;

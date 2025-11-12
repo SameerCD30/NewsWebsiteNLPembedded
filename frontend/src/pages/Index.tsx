@@ -44,7 +44,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onChangeLocation={function (): void {
+        throw new Error("Function not implemented.");
+      } } />
       <CreatePostSheet />
 
       <main className="pt-16 min-h-screen">

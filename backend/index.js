@@ -8,18 +8,22 @@ const postRoutes = require("./routes/postRoutes");
 
 const app = express();
 
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
+
 app.use(
   cors({
-    origin: ["http://localhost:8080", "http://localhost:5173"], 
+    origin: ["http://localhost:8080", "http://localhost:5173"],
     methods: ["GET", "POST"],
     credentials: true,
   })
 );
 
-app.use(express.json());
-
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
@@ -39,5 +43,7 @@ app.get("/health", async (req, res) => {
   });
 });
 
-const PORT = 8081;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 8081;
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);

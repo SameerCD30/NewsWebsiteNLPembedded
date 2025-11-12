@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { fetchCurrentUser } from "@/api/api"; 
+import { fetchCurrentUser } from "@/api/api";
 
 interface User {
   _id: string;
@@ -19,18 +19,19 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
     const verifyUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       try {
-        if (token) {
-          const res = await fetchCurrentUser();
-          setUser(res.data);
-          localStorage.setItem("user", JSON.stringify(res.data));
-        }
+        const res = await fetchCurrentUser();
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
       } catch (err) {
         console.error("Auto-login failed:", err);
         localStorage.removeItem("token");
@@ -40,7 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
       }
     };
-
     verifyUser();
   }, []);
 
