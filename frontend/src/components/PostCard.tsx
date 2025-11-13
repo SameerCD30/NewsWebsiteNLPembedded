@@ -29,7 +29,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { upvotePost, removeUpvote } from "@/api/api";
-import { Post } from "@/types/post"; 
+import { Post } from "@/types/post";
 
 interface PostCardProps {
   post: Post;
@@ -105,15 +105,14 @@ export const PostCard = ({ post }: PostCardProps) => {
       .join("")
       .toUpperCase();
 
+  // LOCATION FORMATTER
   let shortLocation = "";
-
   if (typeof post.location === "string") {
     shortLocation = post.location.split(",").slice(0, 3).join(",");
   } else if (typeof post.location === "object" && post.location !== null) {
     const { city, state, country } = post.location as any;
     shortLocation = [city, state, country].filter(Boolean).join(", ");
   }
-
 
   const tagColors: Record<string, string> = {
     Municipal: "bg-blue-100 text-blue-700 border-blue-300",
@@ -125,6 +124,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   return (
     <article className="bg-card rounded-xl border border-border/60 p-6 hover:border-primary/50 hover:shadow-xl transition-all duration-300 group">
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
@@ -132,27 +132,31 @@ export const PostCard = ({ post }: PostCardProps) => {
               {getInitials(author)}
             </AvatarFallback>
           </Avatar>
+
           <div className="flex flex-col">
+            {/* AUTHOR */}
             <span className="font-semibold text-foreground text-base">
               {author}
             </span>
-            <span className="text-sm text-muted-foreground/80">{timestamp}</span>
-            <AnimatePresence>
+
+            {/* TIMESTAMP + LOCATION INLINE */}
+            <span className="text-sm text-muted-foreground/80 flex items-center gap-2 mt-0.5">
+              {timestamp}
+
               {shortLocation && (
-                <motion.span
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-sm text-muted-foreground/70 flex items-center gap-1 mt-0.5"
-                >
-                  <MapPin className="h-4 w-4 text-orange-500" />
-                  {shortLocation}
-                </motion.span>
+                <>
+                  <span className="text-gray-500">|</span>
+                  <span className="flex items-center gap-1 text-muted-foreground/80">
+                    <MapPin className="h-4 w-4 text-orange-500" />
+                    {shortLocation}
+                  </span>
+                </>
               )}
-            </AnimatePresence>
+            </span>
           </div>
         </div>
+
+        {/* BADGES */}
         <div className="flex items-center gap-2">
           {post.category && (
             <Badge
@@ -165,6 +169,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               {post.category}
             </Badge>
           )}
+
           {reportCount >= REPORT_THRESHOLD && (
             <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
               Potentially Fake
@@ -173,19 +178,22 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
       </div>
 
+      {/* TITLE */}
       <h2 className="text-lg font-semibold text-foreground mb-3">
         {post.title}
       </h2>
 
+      {/* DESCRIPTION */}
       <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">
         {post.description}
       </p>
 
+      {/* IMAGE */}
       {post.image && (
         <div className="mb-5 -mx-6 px-6">
           <img
             src={post.image}
-            alt="Post image"
+            alt="Post"
             className="w-full h-80 object-cover rounded-xl shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300"
             loading="lazy"
           />
@@ -194,9 +202,10 @@ export const PostCard = ({ post }: PostCardProps) => {
 
       <Separator className="mb-3" />
 
+      {/* ACTIONS */}
       <div className="flex items-center gap-6 pt-2">
+        {/* UPVOTE */}
         <motion.button
-          aria-label={isUpvoted ? "Remove upvote" : "Upvote post"}
           onClick={handleUpvote}
           whileTap={{ scale: 1.2 }}
           className="relative flex items-center gap-2 transition-all duration-200 hover:scale-110"
@@ -229,6 +238,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               )}
             </AnimatePresence>
           </motion.div>
+
           <motion.span
             animate={{ color: isUpvoted ? "#f97316" : "#9ca3af" }}
             transition={{ duration: 0.2 }}
@@ -238,8 +248,8 @@ export const PostCard = ({ post }: PostCardProps) => {
           </motion.span>
         </motion.button>
 
+        {/* COMMENTS */}
         <button
-          aria-label="View comments"
           onClick={() => setShowComments((prev) => !prev)}
           className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
         >
@@ -249,19 +259,19 @@ export const PostCard = ({ post }: PostCardProps) => {
           </span>
         </button>
 
+        {/* MORE MENU */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              aria-label="More actions"
-              className="flex items-center gap-2 ml-auto text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110 p-2 rounded-full hover:bg-muted/30 backdrop-blur-sm"
-            >
+            <button className="flex items-center gap-2 ml-auto text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110 p-2 rounded-full hover:bg-muted/30 backdrop-blur-sm">
               <MoreVertical className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
             align="end"
             className="mt-2 w-44 rounded-xl border border-border/50 bg-card/90 shadow-lg backdrop-blur-md text-sm p-1 animate-in fade-in-0 zoom-in-95"
           >
+            {/* SHARE */}
             <DropdownMenuItem
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
@@ -272,6 +282,8 @@ export const PostCard = ({ post }: PostCardProps) => {
               <Share2 className="h-4 w-4 text-blue-500" />
               <span>Share</span>
             </DropdownMenuItem>
+
+            {/* REPORT */}
             <Dialog open={reportDialog} onOpenChange={setReportDialog}>
               <DialogTrigger asChild>
                 <DropdownMenuItem
@@ -282,16 +294,18 @@ export const PostCard = ({ post }: PostCardProps) => {
                   <span>{isReported ? "Reported" : "Report"}</span>
                 </DropdownMenuItem>
               </DialogTrigger>
+
               <DialogContent className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold text-foreground">
                     Report Post
                   </DialogTitle>
                 </DialogHeader>
+
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Are you sure you want to report this post? It will be reviewed
-                  by moderators or concerned authorities.
+                  Are you sure you want to report this post? It will be reviewed.
                 </p>
+
                 <DialogFooter className="mt-4 flex justify-end gap-2">
                   <Button
                     variant="outline"
@@ -300,6 +314,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   >
                     Cancel
                   </Button>
+
                   <Button
                     variant="destructive"
                     onClick={handleReport}
@@ -312,6 +327,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             </Dialog>
           </DropdownMenuContent>
         </DropdownMenu>
+
         {isReported && (
           <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2 font-medium">
             <CheckCircle2 className="h-4 w-4" /> Reported
@@ -319,6 +335,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         )}
       </div>
 
+      {/* COMMENTS SECTION */}
       {showComments && (
         <div className="mt-3">
           <CommentSection postId={post._id} />
