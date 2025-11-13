@@ -5,6 +5,9 @@ const jwt = require("jsonwebtoken");
 const statesData = require("../utils/stateCities");
 const normalizeLocation = require("../utils/normalizeLocation");
 
+const axios = require("axios");
+
+
 const authMiddleware = (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -24,8 +27,29 @@ const authMiddleware = (req, res, next) => {
 router.post("/posts", authMiddleware, async (req, res) => {
   try {
     const { title, description, category, location, image } = req.body;
+
     if (!title || !description || !category || !location) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    try {
+      const ml = await axios.post("http://127.0.0.1:5000/predict", {
+        text: description
+      });
+
+      if (!ml.data.is_issue) {
+        return res.status(400).json({
+          message:
+            "This description does not appear to be a valid public issue.",
+          confidence: ml.data.confidence,
+        });
+      }
+    } catch (err) {
+      console.error("ML Server Error:", err.message);
+      return res.status(500).json({
+        message:
+          "Issue verification service unavailable. Please try again later.",
+      });
     }
 
     let formattedLocation = {
@@ -45,10 +69,14 @@ router.post("/posts", authMiddleware, async (req, res) => {
       formattedLocation.country = location.country || "India";
     }
 
-    const { cityKey, stateKey } = normalizeLocation(formattedLocation.city, formattedLocation.state);
+    const { cityKey, stateKey } = normalizeLocation(
+      formattedLocation.city,
+      formattedLocation.state
+    );
     formattedLocation.cityKey = cityKey;
     formattedLocation.stateKey = stateKey;
 
+    // Save post
     const newPost = new Post({
       title,
       description,
@@ -61,11 +89,14 @@ router.post("/posts", authMiddleware, async (req, res) => {
     await newPost.save();
     await newPost.populate("user", "username email profilePic");
 
-    res.status(201).json({ message: "Post created successfully", post: newPost });
+    res
+      .status(201)
+      .json({ message: "Post created successfully", post: newPost });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
 
 // FETCH POSTS (local/state/national)
 router.get("/posts", async (req, res) => {

@@ -1,3 +1,4 @@
+import { useToast } from "@/hooks/use-toast";
 import { createPost } from "../api/api";
 import { MapPicker } from "@/components/MapPicker";
 import { useState } from "react";
@@ -22,6 +23,8 @@ import {
 } from "./ui/select";
 
 export const CreatePostSheet = () => {
+  const { toast } = useToast();
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -42,7 +45,11 @@ export const CreatePostSheet = () => {
   const handleOpenClick = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please log in to create a post.");
+      toast({
+        title: "Login Required",
+        description: "Please log in to create a post.",
+        variant: "destructive",
+      });
       return;
     }
     setOpen(true);
@@ -59,27 +66,22 @@ export const CreatePostSheet = () => {
 
   const handleSubmit = async () => {
     if (!title || !description || !location?.address || !tagAuthority) {
-      alert("⚠️ Please fill in all required fields.");
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      // ✅ Ensure city is populated from address if missing
-      if (!location.city && location.address) {
-        const addr = location.address.split(",");
-        const probableCity =
-          addr[addr.length - 3]?.trim() || addr[addr.length - 2]?.trim();
-        location.city = probableCity || "Unknown City";
-      }
-
-      // ✅ Extract pincode safely from address if not already provided
+      // Extract pincode
       let pincode = location?.pincode;
       if (!pincode && location?.address) {
         const match = location.address.match(/\b\d{6}\b/);
         pincode = match ? match[0] : "";
       }
 
-      // ✅ Final payload structure
       const postData = {
         title,
         description,
@@ -91,23 +93,37 @@ export const CreatePostSheet = () => {
           lng: location.lng,
           city: location.city,
           state: location.state,
-          country: location.country,
+          country: "India",
           pincode,
         },
       };
 
       const res = await createPost(postData);
       console.log("Post created:", res.data);
-      alert("✅ Issue uploaded successfully!");
+
+      toast({
+        title: "🎉 Issue Submitted",
+        description: "Your post is now live for your city!",
+      });
+
+      // Reset
       setOpen(false);
       setTitle("");
       setDescription("");
       setLocation(null);
       setImage(null);
       setTagAuthority("");
+
     } catch (error: any) {
       console.error("Error creating post:", error);
-      alert(error.response?.data?.message || "Failed to upload issue.");
+
+      toast({
+        title: "⚠️ Post Rejected",
+        description:
+          error.response?.data?.message ||
+          "This post doesn't appear to be a valid civic issue.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -142,54 +158,54 @@ export const CreatePostSheet = () => {
         </SheetHeader>
 
         <div className="space-y-6 mt-8">
+
+          {/* TITLE */}
           <div className="space-y-3">
-            <Label htmlFor="title" className="text-sm font-semibold text-gray-300">
+            <Label className="text-sm font-semibold text-gray-300">
               Title
             </Label>
             <Input
-              id="title"
               placeholder="Brief title for your issue"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="h-11 border border-gray-700 bg-[#1b1b1b] text-gray-100
-                focus:border-red-600 focus:ring-1 focus:ring-red-600/40 transition-all rounded-lg"
+              className="h-11 border border-gray-700 bg-[#1b1b1b]"
             />
           </div>
 
+          {/* DESCRIPTION */}
           <div className="space-y-3">
-            <Label htmlFor="description" className="text-sm font-semibold text-gray-300">
+            <Label className="text-sm font-semibold text-gray-300">
               Description
             </Label>
             <Textarea
-              id="description"
               placeholder="Describe the issue in detail..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[140px] border border-gray-700 bg-[#1b1b1b] text-gray-100
-                focus:border-red-600 focus:ring-1 focus:ring-red-600/40 transition-all resize-none rounded-lg"
+              className="min-h-[140px] border border-gray-700 bg-[#1b1b1b]"
             />
           </div>
 
+          {/* LOCATION */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-gray-300">Location</Label>
+            <Label className="text-sm font-semibold text-gray-300">
+              Location
+            </Label>
 
             {!showMap && !location ? (
               <Button
                 variant="outline"
                 onClick={() => setShowMap(true)}
-                className="w-full border border-gray-700 text-gray-200 hover:bg-[#242424]"
+                className="w-full border border-gray-700 text-gray-200"
               >
                 📍 Select on Map
               </Button>
             ) : showMap ? (
-              <div className="space-y-3">
-                <MapPicker
-                  onSelect={(loc) => {
-                    setLocation(loc);
-                    setShowMap(false);
-                  }}
-                />
-              </div>
+              <MapPicker
+                onSelect={(loc) => {
+                  setLocation(loc);
+                  setShowMap(false);
+                }}
+              />
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -200,47 +216,45 @@ export const CreatePostSheet = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowMap(true)}
-                    className="border border-gray-700 text-gray-300 hover:bg-[#242424] ml-2"
+                    className="border border-gray-700 text-gray-300"
                   >
-                    Change Location
+                    Change
                   </Button>
                 </div>
                 <Input
-                  placeholder="Add landmark or nearby details (optional)"
+                  placeholder="Add landmark (optional)"
                   value={location?.landmark || ""}
                   onChange={(e) =>
                     setLocation((prev) => ({ ...prev, landmark: e.target.value }))
                   }
-                  className="h-11 border border-gray-700 bg-[#1b1b1b] text-gray-100 focus:border-red-600 focus:ring-1 focus:ring-red-600/40 transition-all rounded-lg"
+                  className="h-11 border border-gray-700 bg-[#1b1b1b]"
                 />
               </div>
             )}
           </div>
 
+          {/* TAG AUTHORITY */}
           <div className="space-y-3">
-            <Label htmlFor="tagAuthority" className="text-sm font-semibold text-gray-300">
+            <Label className="text-sm font-semibold text-gray-300">
               Tag Authority
             </Label>
             <Select value={tagAuthority} onValueChange={setTagAuthority}>
-              <SelectTrigger
-                id="tagAuthority"
-                className="w-full h-11 border border-gray-700 bg-[#1b1b1b] text-gray-100
-                  focus:border-red-600 focus:ring-1 focus:ring-red-600/40 transition-all rounded-lg"
-              >
-                <SelectValue placeholder="Select related authority" />
+              <SelectTrigger className="w-full h-11 border border-gray-700 bg-[#1b1b1b] text-gray-100">
+                <SelectValue placeholder="Select authority" />
               </SelectTrigger>
               <SelectContent className="bg-[#1c1c1c] border border-gray-700 text-gray-200">
-                <SelectItem value="Municipal">🏙️ Municipal Department</SelectItem>
-                <SelectItem value="Water">💧 Water Department</SelectItem>
-                <SelectItem value="Electricity">⚡ Electricity Department</SelectItem>
-                <SelectItem value="Police">🚔 Police Department</SelectItem>
+                <SelectItem value="Municipal">🏙 Municipal</SelectItem>
+                <SelectItem value="Water">💧 Water Dept</SelectItem>
+                <SelectItem value="Electricity">⚡ Electricity</SelectItem>
+                <SelectItem value="Police">🚔 Police</SelectItem>
                 <SelectItem value="Other">🧾 Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* IMAGE UPLOAD */}
           <div className="space-y-3">
-            <Label htmlFor="image" className="text-sm font-semibold text-gray-300">
+            <Label className="text-sm font-semibold text-gray-300">
               Add Image
             </Label>
             <div>
@@ -248,29 +262,23 @@ export const CreatePostSheet = () => {
                 <div className="relative overflow-hidden rounded-xl shadow-lg group">
                   <img
                     src={image}
-                    alt="Upload preview"
-                    className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                    alt="Preview"
+                    className="w-full h-56 object-cover"
                   />
                   <button
                     onClick={() => setImage(null)}
-                    className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm p-2 rounded-full 
-                      hover:bg-red-600 hover:text-white transition-all shadow-lg"
+                    className="absolute top-3 right-3 bg-black/60 p-2 rounded-full"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
-                <label
-                  htmlFor="image"
-                  className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-gray-700 
-                    rounded-xl cursor-pointer hover:border-red-600/50 hover:bg-red-600/5 transition-all group"
+                <label className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-gray-700 
+                  rounded-xl cursor-pointer hover:border-red-600/50 hover:bg-red-600/5 transition"
                 >
-                  <Upload className="h-12 w-12 text-gray-500 group-hover:text-red-600 group-hover:scale-110 transition-all duration-200 mb-3" />
-                  <span className="text-sm font-medium text-gray-400 group-hover:text-red-500 transition-colors">
-                    Click to upload image
-                  </span>
+                  <Upload className="h-12 w-12 text-gray-500 mb-3" />
+                  <span className="text-sm text-gray-400">Click to upload image</span>
                   <input
-                    id="image"
                     type="file"
                     accept="image/*"
                     className="hidden"
@@ -281,24 +289,24 @@ export const CreatePostSheet = () => {
             </div>
           </div>
 
+          {/* SUBMIT */}
           <div className="flex gap-3 pt-6">
             <Button
               variant="danger"
               onClick={handleSubmit}
-              className="flex-1 h-12 text-base font-semibold 
-                bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all rounded-lg"
+              className="flex-1 h-12 bg-red-600 hover:bg-red-700"
             >
               Submit Post
             </Button>
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1 h-12 text-base font-medium border border-gray-700 
-                text-gray-300 hover:bg-[#242424] transition-all rounded-lg"
+              className="flex-1 h-12 border border-gray-700"
             >
               Cancel
             </Button>
           </div>
+
         </div>
       </SheetContent>
     </Sheet>
