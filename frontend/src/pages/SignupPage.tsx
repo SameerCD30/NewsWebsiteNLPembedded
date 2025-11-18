@@ -13,6 +13,7 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
+
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -22,7 +23,9 @@ export default function SignupPage() {
   };
 
   const handleSignup = async () => {
-    const { firstName, lastName, dob, email, username, password, confirmPassword } = formData;
+    const { firstName, lastName, dob, email, username, password, confirmPassword } =
+      formData;
+
     setErrorMessage("");
 
     if (!firstName || !lastName || !dob || !email || !username || !password || !confirmPassword) {
@@ -48,7 +51,6 @@ export default function SignupPage() {
       if (!res.ok) {
         setErrorMessage(data.message || "Signup failed");
       } else {
-        alert("Account created successfully!");
         navigate("/login");
       }
     } catch (err) {
@@ -60,94 +62,142 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black p-6">
-      <div className="relative w-full max-w-lg bg-gray-900 rounded-3xl shadow-2xl p-8 space-y-6 text-gray-100">
+    <div className="flex items-center justify-center min-h-screen 
+      bg-[#030712] p-6 text-blue-100">
+
+      {/* Card */}
+      <div className="relative w-full max-w-lg 
+        bg-[#0b0f16]/90 backdrop-blur-xl rounded-3xl 
+        shadow-[0_0_25px_rgba(0,102,255,0.3)]
+        border border-blue-700/30 
+        p-8 space-y-8">
+
+        {/* Exit Button */}
         <button
           onClick={() => navigate("/")}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+          className="absolute top-4 right-4 text-blue-400 hover:text-blue-300 
+          text-3xl font-bold transition"
         >
           ×
         </button>
 
-        <h1 className="text-3xl font-bold text-center text-white">Create Account</h1>
-        <p className="text-gray-400 text-center">Fill the details below</p>
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-center text-blue-300">
+          Create Account
+        </h1>
+        <p className="text-blue-400/80 text-center">
+          Fill the details below to get started
+        </p>
 
+        {/* Form Fields */}
         <div className="grid grid-cols-2 gap-4">
+
           <input
             name="firstName"
             type="text"
             placeholder="First Name"
             value={formData.firstName}
             onChange={handleChange}
-            className="col-span-1 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl placeholder-blue-400/60 
+            focus:outline-none focus:ring-2 focus:ring-blue-500/70"
           />
+
           <input
             name="lastName"
             type="text"
             placeholder="Last Name"
             value={formData.lastName}
             onChange={handleChange}
-            className="col-span-1 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl placeholder-blue-400/60 
+            focus:outline-none focus:ring-2 focus:ring-blue-500/70"
           />
+
           <input
             name="dob"
             type="date"
             value={formData.dob}
             onChange={handleChange}
-            className="col-span-2 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="col-span-2 px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl focus:outline-none 
+            focus:ring-2 focus:ring-blue-500/70"
           />
+
           <input
             name="email"
             type="email"
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
-            className="col-span-2 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="col-span-2 px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl placeholder-blue-400/60 
+            focus:outline-none focus:ring-2 focus:ring-blue-500/70"
           />
+
           <input
             name="username"
             type="text"
             placeholder="Username"
             value={formData.username}
             onChange={handleChange}
-            className="col-span-2 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="col-span-2 px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl placeholder-blue-400/60 
+            focus:outline-none focus:ring-2 focus:ring-blue-500/70"
           />
+
           <input
             name="password"
             type="password"
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className="col-span-1 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl placeholder-blue-400/60 
+            focus:outline-none focus:ring-2 focus:ring-blue-500/70"
           />
+
           <input
             name="confirmPassword"
             type="password"
             placeholder="Confirm Password"
             value={formData.confirmPassword}
             onChange={handleChange}
-            className="col-span-1 px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-4 py-3 bg-[#111827] border border-blue-600/30 
+            text-blue-200 rounded-xl placeholder-blue-400/60 
+            focus:outline-none focus:ring-2 focus:ring-blue-500/70"
           />
         </div>
 
+        {/* Error */}
         {errorMessage && (
-          <p className="text-red-500 text-sm text-center">{errorMessage}</p>
+          <p className="text-red-400 text-sm text-center">{errorMessage}</p>
         )}
 
+        {/* Submit Button */}
         <button
           onClick={handleSignup}
           disabled={loading}
-          className="w-full py-3 bg-teal-600 rounded-xl hover:bg-teal-700 transition font-semibold"
+          className="w-full py-3 rounded-xl font-semibold text-white
+          bg-blue-600 hover:bg-blue-700 
+          shadow-[0_0_15px_rgba(0,102,255,0.5)]
+          hover:shadow-[0_0_20px_rgba(0,102,255,0.7)]
+          transition-all duration-300"
         >
           {loading ? "Creating account..." : "Sign Up"}
         </button>
 
-        <p className="text-gray-400 text-center text-sm">
+        {/* Login Link */}
+        <p className="text-blue-400/80 text-center text-sm">
           Already have an account?{" "}
-          <Link to="/login" className="text-purple-400 hover:underline">
+          <Link
+            to="/login"
+            className="text-blue-300 hover:underline hover:text-blue-200"
+          >
             Log in
           </Link>
         </p>
+
       </div>
     </div>
   );

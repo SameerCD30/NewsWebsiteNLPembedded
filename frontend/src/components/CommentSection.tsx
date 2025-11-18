@@ -44,38 +44,52 @@ export const CommentSection = ({ postId }: { postId: string }) => {
   }, []);
 
   return (
-    <div className="border-t border-gray-700 mt-4 pt-3 space-y-3">
+    <div className="border-t border-blue-700/30 mt-4 pt-4 space-y-4">
+
+      {/* Comment Input */}
       <div className="flex gap-2">
         <input
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Write a comment..."
-          className="flex-1 bg-transparent border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500"
+          className="flex-1 bg-[#0d1117] border border-blue-600/40 
+          rounded-xl px-3 py-2 text-sm text-blue-200
+          focus:outline-none focus:ring-2 focus:ring-blue-500/70
+          placeholder-blue-400/50 transition"
         />
+
         <button
           onClick={handleAddComment}
-          className="bg-red-600 hover:bg-red-700 text-white px-3 rounded-lg transition-all"
+          className="bg-blue-600 hover:bg-blue-700 
+          text-white px-4 rounded-xl flex items-center justify-center
+          shadow-[0_0_12px_rgba(0,102,255,0.5)]
+          hover:shadow-[0_0_16px_rgba(0,102,255,0.7)] 
+          transition-all"
         >
           <Send className="h-4 w-4" />
         </button>
       </div>
 
+      {/* Comments */}
       {loading ? (
-        <p className="text-sm text-gray-400">Loading comments...</p>
+        <p className="text-sm text-blue-400">Loading comments...</p>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-gray-400">No comments yet.</p>
+        <p className="text-sm text-blue-400/70">No comments yet.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {comments.map((c) => (
             <div
               key={c._id}
-              className="bg-gray-800/50 rounded-lg p-2 text-sm flex justify-between"
+              className="bg-[#0f141c] border border-blue-700/30 
+              rounded-xl p-3 text-sm flex justify-between 
+              shadow-[0_0_10px_rgba(0,102,255,0.15)]"
             >
-              <span>
-                <strong className="text-red-400">{c.user.username}:</strong>{" "}
+              <span className="text-blue-200">
+                <strong className="text-blue-400">{c.user.username}:</strong>{" "}
                 {c.text}
               </span>
-              <span className="text-gray-500 text-xs">
+
+              <span className="text-blue-400/60 text-xs ml-4 min-w-[110px] text-right">
                 {new Date(c.createdAt).toLocaleString("en-IN", {
                   dateStyle: "short",
                   timeStyle: "short",

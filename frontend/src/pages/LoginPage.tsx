@@ -27,7 +27,6 @@ export default function LoginPage() {
       if (!token || !user) throw new Error("Invalid login response.");
 
       login(user, token);
-      alert("Login successful!");
       navigate("/");
     } catch (err: any) {
       console.error(err);
@@ -42,55 +41,95 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black p-6">
-      <div className="relative w-full max-w-md bg-gray-900 rounded-3xl shadow-2xl p-8 space-y-6 text-gray-100">
+    <div className="flex items-center justify-center min-h-screen 
+      bg-[#030712] text-blue-100 p-6">
+
+      {/* Card */}
+      <div className="relative w-full max-w-md 
+        bg-[#0b0f16]/90 backdrop-blur-xl rounded-3xl 
+        border border-blue-700/30 
+        shadow-[0_0_25px_rgba(0,102,255,0.25)]
+        p-8 space-y-8">
+
+        {/* Close button */}
         <button
           onClick={() => navigate("/")}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+          className="absolute top-4 right-4 text-blue-400 hover:text-blue-300 
+          text-3xl font-bold transition"
         >
           ×
         </button>
 
-        <h1 className="text-3xl font-bold text-center text-white">
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-center text-blue-300">
           Welcome Back
         </h1>
-        <p className="text-gray-400 text-center">Login to your account</p>
+        <p className="text-blue-400/80 text-center">
+          Login to your account to continue
+        </p>
 
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Username or Email"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
+        {/* Inputs */}
+        <div className="space-y-5">
+          <div>
+            <input
+              type="text"
+              placeholder="Username or Email"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl 
+              bg-[#111827] border border-blue-700/30 text-blue-200
+              placeholder-blue-400/50
+              focus:outline-none focus:ring-2 focus:ring-blue-500/70
+              transition"
+            />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl 
+              bg-[#111827] border border-blue-700/30 text-blue-200
+              placeholder-blue-400/50
+              focus:outline-none focus:ring-2 focus:ring-blue-500/70
+              transition"
+            />
+          </div>
         </div>
 
+        {/* Error Message */}
         {errorMessage && (
-          <p className="text-red-500 text-sm text-center">{errorMessage}</p>
+          <p className="text-red-400 text-sm text-center font-medium">
+            {errorMessage}
+          </p>
         )}
 
+        {/* Login Button */}
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full py-3 bg-purple-600 rounded-xl hover:bg-purple-700 transition font-semibold"
+          className="w-full py-3 rounded-xl font-semibold text-white
+          bg-blue-600 hover:bg-blue-700 
+          shadow-[0_0_15px_rgba(0,102,255,0.6)]
+          hover:shadow-[0_0_20px_rgba(0,102,255,0.8)]
+          transition-all duration-300"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="text-gray-400 text-center text-sm">
+        {/* Signup Link */}
+        <p className="text-blue-400/80 text-center text-sm">
           Don’t have an account?{" "}
-          <Link to="/signup" className="text-teal-400 hover:underline">
+          <Link
+            to="/signup"
+            className="text-blue-300 hover:underline hover:text-blue-200"
+          >
             Create one
           </Link>
         </p>
+
       </div>
     </div>
   );

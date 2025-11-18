@@ -60,70 +60,81 @@ const Feed: React.FC = () => {
     <>
       <Header onChangeLocation={() => setIsModalOpen(true)} />
 
-      <main className="pt-20 px-4 md:px-8 flex flex-col gap-6 max-w-4xl mx-auto w-full bg-[#121212]/20 rounded-2xl shadow-inner">
-
-        {/* Centered Tabs + Location */}
+      <main
+        className="pt-20 px-4 md:px-8 max-w-4xl mx-auto w-full
+        bg-[#0b0f16]/60 backdrop-blur-xl 
+        rounded-2xl shadow-[0_0_20px_rgba(0,102,255,0.15)] 
+        border border-blue-700/20 flex flex-col gap-6 pb-10"
+      >
+        {/* Tabs + Location */}
         <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4 }}
           className="flex flex-col items-center gap-3 pt-4"
         >
-          {/* Tabs Centered */}
+          {/* Tabs */}
           <div className="w-full flex justify-center">
             <Tabs value={scope} onValueChange={(val) => setScope(val as any)}>
-              <TabsList className="bg-zinc-900 px-2 py-1 rounded-full flex gap-1">
-                
+              <TabsList
+                className="bg-[#111827] border border-blue-600/30 
+                px-2 py-1 rounded-full flex gap-1 shadow-[0_0_10px_rgba(0,102,255,0.2)]"
+              >
                 <TabsTrigger
                   value="local"
-                  className="px-5 py-1.5 rounded-full text-sm font-medium
+                  className="px-5 py-1.5 rounded-full text-sm font-medium 
                     transition-all duration-200
-                    data-[state=active]:bg-orange-600
+                    data-[state=active]:bg-blue-600
                     data-[state=active]:text-white
-                    data-[state=inactive]:text-gray-300"
+                    data-[state=active]:shadow-[0_0_12px_rgba(0,102,255,0.6)]
+                    data-[state=inactive]:text-gray-300
+                    hover:text-blue-400"
                 >
                   Local
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="state"
-                  className="px-5 py-1.5 rounded-full text-sm font-medium
+                  className="px-5 py-1.5 rounded-full text-sm font-medium 
                     transition-all duration-200
-                    data-[state=active]:bg-orange-600
+                    data-[state=active]:bg-blue-600
                     data-[state=active]:text-white
-                    data-[state=inactive]:text-gray-300"
+                    data-[state=active]:shadow-[0_0_12px_rgba(0,102,255,0.6)]
+                    data-[state=inactive]:text-gray-300
+                    hover:text-blue-400"
                 >
                   State
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="national"
-                  className="px-5 py-1.5 rounded-full text-sm font-medium
+                  className="px-5 py-1.5 rounded-full text-sm font-medium 
                     transition-all duration-200
-                    data-[state=active]:bg-orange-600
+                    data-[state=active]:bg-blue-600
                     data-[state=active]:text-white
-                    data-[state=inactive]:text-gray-300"
+                    data-[state=active]:shadow-[0_0_12px_rgba(0,102,255,0.6)]
+                    data-[state=inactive]:text-gray-300
+                    hover:text-blue-400"
                 >
                   National
                 </TabsTrigger>
-
               </TabsList>
             </Tabs>
           </div>
 
-          {/* Location */}
+          {/* Location Display */}
           <motion.p
             key={JSON.stringify(location)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="text-sm text-muted-foreground tracking-wide"
+            className="text-sm text-blue-300 tracking-wide"
           >
             📍 {location.city}, {location.state} | {location.country}
           </motion.p>
         </motion.div>
 
-        {/* Feed */}
+        {/* Feed Content */}
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.p
@@ -131,7 +142,7 @@ const Feed: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center text-muted-foreground py-10"
+              className="text-center text-gray-400 py-10"
             >
               Loading posts…
             </motion.p>
@@ -160,7 +171,7 @@ const Feed: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center text-muted-foreground py-10"
+              className="text-center text-gray-400 py-10"
             >
               No posts found for this area.
             </motion.p>

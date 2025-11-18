@@ -19,53 +19,57 @@ export const Header: React.FC<HeaderProps> = ({ onChangeLocation }) => {
   const { user, logout } = useAuth();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-gradient-to-r from-[#1a1a1d]/95 to-[#2a2a2d]/95 backdrop-blur-xl border-b border-border/50 shadow-lg">
+    <header className="fixed top-0 left-0 right-0 z-50 h-16 
+      bg-[#0b0f16]/80 backdrop-blur-2xl 
+      border-b border-blue-600/20 
+      shadow-[0_0_15px_rgba(0,102,255,0.25)]">
       <div className="flex h-full items-center justify-between px-8">
+
         {/* LOGO */}
         <h1
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="text-3xl font-extrabold tracking-tight 
-             bg-gradient-to-r from-rose-500 via-red-500 to-orange-400 
-             bg-clip-text text-transparent 
-             drop-shadow-[0_2px_8px_rgba(255,100,100,0.6)] 
-             cursor-pointer transition-all duration-300 
-             hover:scale-105 hover:drop-shadow-[0_4px_12px_rgba(255,100,100,0.8)]"
+          className="text-3xl font-extrabold tracking-tight cursor-pointer 
+            bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-300 
+            bg-clip-text text-transparent 
+            drop-shadow-[0_0_10px_rgba(0,122,255,0.7)]
+            transition-all duration-300 
+            hover:scale-105 hover:drop-shadow-[0_0_16px_rgba(0,122,255,0.9)]"
         >
           Grievance Beacon
         </h1>
 
-        {/* RIGHT SECTION */}
+        {/* RIGHT SIDE */}
         <div className="flex items-center gap-6">
+
           {/* Change Location */}
           <button
             type="button"
-            onClick={() => {
-              console.log("Change Location clicked!");
-              onChangeLocation();
-            }}
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105"
+            onClick={() => onChangeLocation()}
+            className="flex items-center gap-2 text-sm font-medium 
+              text-gray-300 hover:text-blue-400 
+              transition-all duration-300 hover:scale-105"
           >
-            <MapPin className="h-4 w-4 text-primary pointer-events-none" />
+            <MapPin className="h-4 w-4 text-blue-400 pointer-events-none" />
             Change Location
           </button>
 
-          {/* Auth Section */}
+          {/* Auth Buttons */}
           {!user ? (
             <Button
               onClick={() => navigate("/login")}
-              className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold px-6 py-2 rounded-lg 
-                     shadow-[0_4px_10px_rgba(255,0,0,0.4)] 
-                     transition-all duration-300 
-                     hover:from-red-600 hover:to-rose-700 
-                     hover:shadow-[0_6px_14px_rgba(255,0,0,0.6)] 
-                     hover:scale-105 active:scale-95"
+              className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg 
+                shadow-[0_0_12px_rgba(0,102,255,0.45)] 
+                transition-all duration-300 
+                hover:bg-blue-700 hover:shadow-[0_0_18px_rgba(0,102,255,0.65)] 
+                hover:scale-105 active:scale-95"
             >
               Login / Sign Up
             </Button>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-full border-2 border-red-600 hover:scale-105 transition">
+                <button className="rounded-full border-2 border-blue-500 
+                  hover:scale-105 transition shadow-[0_0_8px_rgba(0,102,255,0.4)]">
                   <Avatar className="h-10 w-10">
                     <AvatarImage
                       src={
@@ -83,14 +87,16 @@ export const Header: React.FC<HeaderProps> = ({ onChangeLocation }) => {
 
               <DropdownMenuContent
                 align="end"
-                className="w-44 bg-[#1b1b1b] border border-gray-700 text-gray-200 rounded-lg shadow-lg"
+                className="w-44 bg-[#0f141c] border border-blue-600/30 
+                  text-gray-200 rounded-lg shadow-xl"
               >
                 <DropdownMenuItem
                   onClick={() => navigate("/myposts")}
-                  className="cursor-pointer hover:bg-red-600/20 transition"
+                  className="cursor-pointer hover:bg-blue-600/20 transition"
                 >
                   🧾 My Posts
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-red-400 hover:bg-red-600/20 transition"

@@ -53,30 +53,24 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   const handleUpvote = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Please log in to upvote.");
-      return;
-    }
+    if (!token) return alert("Please log in to upvote.");
+
     try {
       if (isUpvoted) {
         const res = await removeUpvote(post._id);
         if (res.status === 200) {
-          setVotes((prev) => Math.max(prev - 1, 0));
+          setVotes((v) => v - 1);
           setIsUpvoted(false);
         }
       } else {
         const res = await upvotePost(post._id);
         if (res.status === 200) {
-          setVotes((prev) => prev + 1);
+          setVotes((v) => v + 1);
           setIsUpvoted(true);
         }
       }
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        alert("Please log in to upvote.");
-      } else {
-        alert(err.response?.data?.message || "Something went wrong.");
-      }
+    } catch (err) {
+      alert("Something went wrong.");
     }
   };
 
@@ -86,13 +80,9 @@ export const PostCard = ({ post }: PostCardProps) => {
     setReportDialog(false);
     try {
       const res = await fetch(`/api/report/${post._id}`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to report");
+      if (!res.ok) throw new Error("Fail");
       const data = await res.json();
-      const newCount =
-        typeof data.reportCount === "number"
-          ? data.reportCount
-          : reportCount + 1;
-      setReportCount(newCount);
+      setReportCount(data.reportCount || reportCount + 1);
     } catch {
       setReportCount((prev) => prev + 1);
     }
@@ -105,49 +95,53 @@ export const PostCard = ({ post }: PostCardProps) => {
       .join("")
       .toUpperCase();
 
-  // LOCATION FORMATTER
+  // LOCATION FORMAT
   let shortLocation = "";
   if (typeof post.location === "string") {
-    shortLocation = post.location.split(",").slice(0, 3).join(",");
+    shortLocation = post.location.split(",").slice(0, 3).join(", ");
   } else if (typeof post.location === "object" && post.location !== null) {
     const { city, state, country } = post.location as any;
     shortLocation = [city, state, country].filter(Boolean).join(", ");
   }
 
   const tagColors: Record<string, string> = {
-    Municipal: "bg-blue-100 text-blue-700 border-blue-300",
-    Water: "bg-cyan-100 text-cyan-700 border-cyan-300",
-    Electricity: "bg-yellow-100 text-yellow-700 border-yellow-300",
-    Police: "bg-purple-100 text-purple-700 border-purple-300",
-    Other: "bg-gray-100 text-gray-700 border-gray-300",
+    Municipal: "bg-blue-600/20 text-blue-300 border-blue-500/40",
+    Water: "bg-cyan-600/20 text-cyan-300 border-cyan-500/40",
+    Electricity: "bg-yellow-600/20 text-yellow-300 border-yellow-500/40",
+    Police: "bg-purple-600/20 text-purple-300 border-purple-500/40",
+    Other: "bg-gray-600/20 text-gray-300 border-gray-500/40",
   };
 
   return (
-    <article className="bg-card rounded-xl border border-border/60 p-6 hover:border-primary/50 hover:shadow-xl transition-all duration-300 group">
+    <article
+      className="bg-[#0d1117]/80 backdrop-blur-xl p-6 rounded-2xl 
+      border border-blue-700/20 shadow-[0_0_15px_rgba(0,102,255,0.1)]
+      hover:border-blue-600/40 hover:shadow-[0_0_25px_rgba(0,102,255,0.2)]
+      transition-all duration-300"
+    >
+      
       {/* HEADER */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
-            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold">
+          <Avatar className="h-11 w-11 ring-2 ring-blue-500/30 ring-offset-2 ring-offset-[#0b0f16]">
+            <AvatarFallback className="bg-blue-600/20 text-blue-300 font-bold">
               {getInitials(author)}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col">
-            {/* AUTHOR */}
-            <span className="font-semibold text-foreground text-base">
+            <span className="font-semibold text-blue-300 text-base">
               {author}
             </span>
 
-            {/* TIMESTAMP + LOCATION INLINE */}
-            <span className="text-sm text-muted-foreground/80 flex items-center gap-2 mt-0.5">
+            <span className="text-sm text-gray-400 flex items-center gap-2 mt-0.5">
               {timestamp}
 
               {shortLocation && (
                 <>
-                  <span className="text-gray-500">|</span>
-                  <span className="flex items-center gap-1 text-muted-foreground/80">
-                    <MapPin className="h-4 w-4 text-orange-500" />
+                  <span className="text-gray-600">|</span>
+                  <span className="flex items-center gap-1 text-gray-400">
+                    <MapPin className="h-4 w-4 text-blue-500" />
                     {shortLocation}
                   </span>
                 </>
@@ -156,22 +150,18 @@ export const PostCard = ({ post }: PostCardProps) => {
           </div>
         </div>
 
-        {/* BADGES */}
         <div className="flex items-center gap-2">
           {post.category && (
             <Badge
               variant="outline"
-              className={`${
-                tagColors[post.category] ||
-                "bg-primary/5 text-primary border-primary/40"
-              } px-3 py-1 font-medium`}
+              className={`${tagColors[post.category]} px-3 py-1 font-medium`}
             >
               {post.category}
             </Badge>
           )}
 
           {reportCount >= REPORT_THRESHOLD && (
-            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 font-medium">
+            <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/40 font-medium">
               Potentially Fake
             </Badge>
           )}
@@ -179,12 +169,12 @@ export const PostCard = ({ post }: PostCardProps) => {
       </div>
 
       {/* TITLE */}
-      <h2 className="text-lg font-semibold text-foreground mb-3">
+      <h2 className="text-lg font-semibold text-blue-200 mb-3">
         {post.title}
       </h2>
 
       {/* DESCRIPTION */}
-      <p className="text-foreground/90 mb-5 leading-relaxed text-[15px]">
+      <p className="text-gray-300 mb-5 leading-relaxed text-[15px]">
         {post.description}
       </p>
 
@@ -193,39 +183,40 @@ export const PostCard = ({ post }: PostCardProps) => {
         <div className="mb-5 -mx-6 px-6">
           <img
             src={post.image}
-            alt="Post"
-            className="w-full h-80 object-cover rounded-xl shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300"
+            className="w-full h-80 object-cover rounded-xl shadow-lg 
+            hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(0,102,255,0.3)]
+            transition-all duration-300"
             loading="lazy"
           />
         </div>
       )}
 
-      <Separator className="mb-3" />
+      <Separator className="mb-3 bg-blue-700/20" />
 
       {/* ACTIONS */}
       <div className="flex items-center gap-6 pt-2">
+
         {/* UPVOTE */}
         <motion.button
           onClick={handleUpvote}
           whileTap={{ scale: 1.2 }}
-          className="relative flex items-center gap-2 transition-all duration-200 hover:scale-110"
+          className="relative flex items-center gap-2 hover:scale-110 transition-all"
         >
           <motion.div
             initial={false}
             animate={{
-              scale: isUpvoted ? [1, 1.3, 1] : [1.1, 1, 1],
+              scale: isUpvoted ? [1, 1.3, 1] : 1,
               rotate: isUpvoted ? [0, -15, 0] : 0,
             }}
             transition={{ duration: 0.3 }}
-            className="relative flex items-center justify-center"
+            className="relative"
           >
             <ArrowUp
-              className={`h-6 w-6 transition-colors duration-300 ${
-                isUpvoted
-                  ? "text-orange-500"
-                  : "text-gray-400 group-hover:text-orange-400"
+              className={`h-6 w-6 ${
+                isUpvoted ? "text-blue-400" : "text-gray-400"
               }`}
             />
+
             <AnimatePresence>
               {isUpvoted && (
                 <motion.div
@@ -233,14 +224,14 @@ export const PostCard = ({ post }: PostCardProps) => {
                   animate={{ scale: 1.2, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="absolute inset-0 bg-orange-500 rounded-full blur-md opacity-40"
+                  className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-40"
                 />
               )}
             </AnimatePresence>
           </motion.div>
 
           <motion.span
-            animate={{ color: isUpvoted ? "#f97316" : "#9ca3af" }}
+            animate={{ color: isUpvoted ? "#60a5fa" : "#9ca3af" }}
             transition={{ duration: 0.2 }}
             className="text-sm font-semibold"
           >
@@ -250,8 +241,8 @@ export const PostCard = ({ post }: PostCardProps) => {
 
         {/* COMMENTS */}
         <button
-          onClick={() => setShowComments((prev) => !prev)}
-          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-200 hover:scale-110"
+          onClick={() => setShowComments((x) => !x)}
+          className="flex items-center gap-2 text-gray-400 hover:text-blue-400 hover:scale-110 transition-all"
         >
           <MessageCircle className="h-5 w-5" />
           <span className="text-sm font-semibold">
@@ -262,63 +253,61 @@ export const PostCard = ({ post }: PostCardProps) => {
         {/* MORE MENU */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 ml-auto text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110 p-2 rounded-full hover:bg-muted/30 backdrop-blur-sm">
+            <button className="ml-auto p-2 rounded-full text-gray-400 
+            hover:text-blue-400 hover:bg-blue-900/20 hover:scale-110 transition">
               <MoreVertical className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
             align="end"
-            className="mt-2 w-44 rounded-xl border border-border/50 bg-card/90 shadow-lg backdrop-blur-md text-sm p-1 animate-in fade-in-0 zoom-in-95"
+            className="mt-2 w-44 bg-[#0b0f16]/90 backdrop-blur-xl 
+            border border-blue-700/40 rounded-xl shadow-xl p-1"
           >
-            {/* SHARE */}
             <DropdownMenuItem
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href);
-                alert("Post link copied to clipboard!");
+                alert("Post link copied!");
               }}
-              className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-600"
+              className="cursor-pointer flex items-center gap-2 px-3 py-2.5 
+              rounded-lg hover:bg-blue-600/15 hover:text-blue-400 transition"
             >
-              <Share2 className="h-4 w-4 text-blue-500" />
-              <span>Share</span>
+              <Share2 className="h-4 w-4 text-blue-400" />
+              Share
             </DropdownMenuItem>
 
-            {/* REPORT */}
             <Dialog open={reportDialog} onOpenChange={setReportDialog}>
               <DialogTrigger asChild>
                 <DropdownMenuItem
-                  className="cursor-pointer flex items-center gap-2 px-3 py-2.5 rounded-lg text-danger hover:bg-red-500/15 hover:text-red-600"
+                  className="cursor-pointer flex items-center gap-2 px-3 py-2.5 
+                  rounded-lg text-red-300 hover:bg-red-600/15 hover:text-red-400"
                   onSelect={(e) => e.preventDefault()}
                 >
-                  <Flag className="h-4 w-4 text-red-500" />
-                  <span>{isReported ? "Reported" : "Report"}</span>
+                  <Flag className="h-4 w-4 text-red-400" />
+                  {isReported ? "Reported" : "Report"}
                 </DropdownMenuItem>
               </DialogTrigger>
 
-              <DialogContent className="bg-card/95 backdrop-blur-xl border border-border/50 shadow-xl rounded-2xl">
+              <DialogContent className="bg-[#0b0f16]/95 backdrop-blur-2xl border border-blue-700/40 shadow-xl rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold text-foreground">
+                  <DialogTitle className="text-blue-300">
                     Report Post
                   </DialogTitle>
                 </DialogHeader>
 
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Are you sure you want to report this post? It will be reviewed.
+                <p className="text-sm text-gray-400">
+                  Are you sure you want to report this post?
                 </p>
 
                 <DialogFooter className="mt-4 flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setReportDialog(false)}
-                    className="border-border/60"
-                  >
+                  <Button variant="outline" onClick={() => setReportDialog(false)}>
                     Cancel
                   </Button>
 
                   <Button
                     variant="destructive"
                     onClick={handleReport}
-                    className="bg-red-600 hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+                    className="bg-red-600 hover:bg-red-700"
                   >
                     Confirm Report
                   </Button>
@@ -329,13 +318,13 @@ export const PostCard = ({ post }: PostCardProps) => {
         </DropdownMenu>
 
         {isReported && (
-          <span className="flex items-center gap-1.5 text-sm text-red-600 ml-2 font-medium">
+          <span className="flex items-center gap-1.5 text-sm text-red-400 ml-2 font-medium">
             <CheckCircle2 className="h-4 w-4" /> Reported
           </span>
         )}
       </div>
 
-      {/* COMMENTS SECTION */}
+      {/* COMMENTS */}
       {showComments && (
         <div className="mt-3">
           <CommentSection postId={post._id} />
